@@ -1,0 +1,124 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TECHNICIAN
+  SUPERVISOR
+  ADMIN
+}
+
+model User {
+  id           String                @id @default(uuid()) @db.Uuid
+  name         String
+  email        String                @unique
+  password     String
+  role         Role                  @default(TECHNICIAN)
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  // Relações
+  machines     Machine[]             @relation("UserMachines")
+  orders       MaintenanceOrder[]
+  schedules    Schedule[]
+  notifications Notification[]
+}
+
+model Machine {
+  id           String                @id @default(uuid()) @db.Uuid
+  name         String
+  serial       String                @unique
+  location     String?
+  status       String                @default("ACTIVE")
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  // Relações
+  user         User                  @relation("UserMachines", fields: [userId], references: [id])
+  userId       String
+  orders       MaintenanceOrder[]
+  schedules    Schedule[]
+}
+
+model MaintenanceOrder {
+  id           String        @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  status       String        @default("PENDING")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  // Relações
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  machine      Machine       @relation(fields: [machineId], references: [id])
+  machineId    String
+  items        OrderItem[]
+  history      History?
+}
+
+model OrderItem {
+  id           String        @id @default(uuid()) @db.Uuid
+  quantity     Int           @default(1)
+  usedAt       DateTime      @default(now())
+  // Relações
+  order        MaintenanceOrder @relation(fields: [orderId], references: [id])
+  orderId      String
+  piece        Piece         @relation(fields: [pieceId], references: [id])
+  pieceId      String
+}
+
+model Piece {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  code         String        @unique
+  quantity     Int           @default(0)
+  minStock     Int           @default(0)
+  unitPrice    Float?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  // Relações
+  items        OrderItem[]
+}
+
+model History {
+  id           String        @id @default(uuid()) @db.Uuid
+  completedAt  DateTime      @default(now())
+  notes        String?
+  // Relações
+  order        MaintenanceOrder @relation(fields: [orderId], references: [id])
+  orderId      String           @unique
+}
+
+model Schedule {
+  id           String        @id @default(uuid()) @db.Uuid
+  date         DateTime
+  notes        String?
+  createdAt    DateTime      @default(now())
+  // Relações
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  machine      Machine       @relation(fields: [machineId], references: [id])
+  machineId    String
+  notifications Notification[]
+}
+
+model Notification {
+  id           String        @id @default(uuid()) @db.Uuid
+  message      String
+  createdAt    DateTime      @default(now())
+  read         Boolean       @default(false)
+  // Relações
+  user         User?         @relation(fields: [userId], references: [id])
+  userId       String?
+  schedule     Schedule?     @relation(fields: [scheduleId], references: [id])
+  scheduleId   String?
+}
