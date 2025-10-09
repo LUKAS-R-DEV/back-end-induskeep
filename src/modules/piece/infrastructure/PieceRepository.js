@@ -1,21 +1,22 @@
-import { Prisma } from "@prisma/client";
+import prisma from "../../../infrastructure/database/prismaClient.js";
+
 export const PieceRepository={
     async findAll(){
-        return Prisma.Piece.findMany();
+        return prisma.Piece.findMany(); //return Prisma.Piece.findMany();
     },
     async findById(id){
-        return Prisma.Piece.findUnique({where:{id}})
+        return prisma.Piece.findUnique({where:{id}})
     },
     async findByCode(code){
-        return Prisma.Piece.findUnique({where:{code}})
+        return prisma.Piece.findUnique({where:{code}})
     },
     async create(data){
-        return Prisma.Piece.create({data})
+        return prisma.Piece.create({data})
     },
     async update(id,data){
-        return Prisma.Piece.update({where:{id},data})
+        return prisma.Piece.update({where:{id},data})
     },
     async delete(id){
-        return Prisma.Piece.delete({where:{id}})
+        return prisma.Piece.delete({where:{id}})
     }
 }
