@@ -1,4 +1,4 @@
-import prisma from "../../../infrastructure/database/prismaClient";
+import prisma from "../../../infrastructure/database/prismaClient.js";
 
 export const MachineRepository={
     async findAll(){
@@ -11,6 +11,7 @@ export const MachineRepository={
 },
 
     async findById(id){
+        if(!id) throw new Error("Id da maquina nao informado");
         return prisma.machine.findUnique({where:{id}})
     },
 

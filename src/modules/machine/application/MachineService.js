@@ -26,4 +26,4 @@ export const MachineService={
     return await MachineRepository.delete(id);
   }
 
-}
+};
