@@ -7,6 +7,8 @@ import ordemItemRoutes from "../../modules/orderItem/interface/orderItem.routes.
 import scheduleRoutes from "../../modules/schedule/interface/schedule.routes.js";
 import notificationRoutes from "../../modules/notification/interface/notification.routes.js";
 import historyRoutes from "../../modules/history/interface/history.routes.js";
+import stockRoutes from "../../modules/stock/interface/stock.routes.js";
+
 const router=Router();
 router.use("/auth",userRoutes);
 router.use("/machines",machineRoutes);
@@ -16,5 +18,6 @@ router.use("/order-items",ordemItemRoutes);
 router.use("/schedules",scheduleRoutes);
 router.use("/notifications",notificationRoutes);
 router.use("/history",historyRoutes);
+router.use("/stock",stockRoutes);
 
 export default router;

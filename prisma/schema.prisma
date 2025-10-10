@@ -35,6 +35,7 @@ model User {
   orders         MaintenanceOrder[]
   schedules      Schedule[]
   notifications  Notification[]
+  stockMovements StockMovement[]
 }
 
 model Machine {
@@ -99,6 +100,7 @@ model Piece {
   unitPrice      Float?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
+  stockMovements StockMovement[]
 
   // Relações
   items          OrderItem[]
@@ -147,4 +149,18 @@ model Notification {
   userId         String?          @db.Uuid
   schedule       Schedule?        @relation(fields: [scheduleId], references: [id])
   scheduleId     String?          @db.Uuid
+}
+
+model StockMovement {
+  id        String   @id @default(uuid()) @db.Uuid
+  quantity  Int
+  type      String
+  notes     String?
+  movedAt   DateTime @default(now())
+
+  // Relações
+  piece     Piece    @relation(fields: [pieceId], references: [id])
+  pieceId   String   @db.Uuid      
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.Uuid      
 }
