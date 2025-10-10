@@ -1,10 +1,17 @@
 import {Router} from 'express';
-import UserRoutes from "../../modules/user/interface/user.routes.js";
-import MachineRoutes from "../../modules/machine/interface/Machine.routes.js";
-import PieceRoutes from "../../modules/piece/interface/Piece.routes.js";
+import userRoutes from "../../modules/user/interface/user.routes.js";
+import machineRoutes from "../../modules/machine/interface/machine.routes.js";
+import pieceRoutes from "../../modules/piece/interface/piece.routes.js";
+import maintenanceOrderRoutes from "../../modules/maintenanceOrder/interface/maintenanceOrder.routes.js";
+import ordemItemRoutes from "../../modules/orderItem/interface/orderItem.routes.js";
+import scheduleRoutes from "../../modules/schedule/interface/schedule.routes.js";
+
 const router=Router();
-router.use("/auth",UserRoutes);
-router.use("/machines",MachineRoutes);
-router.use("/pieces",PieceRoutes);
+router.use("/auth",userRoutes);
+router.use("/machines",machineRoutes);
+router.use("/pieces",pieceRoutes);
+router.use("/orders",maintenanceOrderRoutes);
+router.use("/order-items",ordemItemRoutes);
+router.use("/schedules",scheduleRoutes);
 
 export default router;

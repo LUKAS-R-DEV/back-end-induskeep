@@ -25,7 +25,17 @@
     "nodemon": "^3.1.10",
     "prisma": "^6.17.0"
   },
-  "keywords": ["induskeep", "clean-architecture", "nodejs", "express", "prisma", "api"],
-  "author": "Seu Nome",
-  "license": "MIT"
+  "keywords": [
+    "induskeep",
+    "clean-architecture",
+    "nodejs",
+    "express",
+    "prisma",
+    "api"
+  ],
+  "author": "Lucas Rafael",
+  "license": "MIT",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
 }
