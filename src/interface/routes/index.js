@@ -9,7 +9,7 @@ import notificationRoutes from "../../modules/notification/interface/notificatio
 import historyRoutes from "../../modules/history/interface/history.routes.js";
 import stockRoutes from "../../modules/stock/interface/stock.routes.js";
 import reportRoutes from "../../modules/reports/interface/report.routes.js";
-
+import passordRecoveryRoutes from "../../modules/auth/interface/passwordRecovery.routes.js";
 const router=Router();
 
 router.use("/auth",userRoutes);
@@ -22,4 +22,5 @@ router.use("/notifications",notificationRoutes);
 router.use("/history",historyRoutes);
 router.use("/stock",stockRoutes);
 router.use("/reports",reportRoutes);
+router.use("/auth",passordRecoveryRoutes); 
 export default router;
