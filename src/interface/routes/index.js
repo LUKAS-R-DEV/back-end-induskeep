@@ -10,6 +10,9 @@ import historyRoutes from "../../modules/history/interface/history.routes.js";
 import stockRoutes from "../../modules/stock/interface/stock.routes.js";
 import reportRoutes from "../../modules/reports/interface/report.routes.js";
 import passordRecoveryRoutes from "../../modules/auth/interface/passwordRecovery.routes.js";
+import analyticsRoutes from "../../modules/analytics/interface/analytics.routes.js";
+import auditRoutes from "../../modules/audit/interface/audit.routes.js";
+
 const router=Router();
 
 router.use("/auth",userRoutes);
@@ -22,5 +25,9 @@ router.use("/notifications",notificationRoutes);
 router.use("/history",historyRoutes);
 router.use("/stock",stockRoutes);
 router.use("/reports",reportRoutes);
-router.use("/auth",passordRecoveryRoutes); 
+router.use("/auth",passordRecoveryRoutes);
+router.use("/analytics",analyticsRoutes);
+router.use("/audit",auditRoutes);
+
 export default router;
+
