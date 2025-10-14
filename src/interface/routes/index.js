@@ -12,6 +12,7 @@ import reportRoutes from "../../modules/reports/interface/report.routes.js";
 import passordRecoveryRoutes from "../../modules/auth/interface/passwordRecovery.routes.js";
 import analyticsRoutes from "../../modules/analytics/interface/analytics.routes.js";
 import auditRoutes from "../../modules/audit/interface/audit.routes.js";
+import exportRoutes from "../../modules/export/interface/export.routes.js";
 
 const router=Router();
 
@@ -28,6 +29,7 @@ router.use("/reports",reportRoutes);
 router.use("/auth",passordRecoveryRoutes);
 router.use("/analytics",analyticsRoutes);
 router.use("/audit",auditRoutes);
+router.use("/export",exportRoutes);
 
 export default router;
 

@@ -8,6 +8,6 @@ router.use(authMiddleware);
 
 router.get("/",PieceController.getAll);
 router.post("/",PieceController.create);
-router.put("/:id",PieceController.updare);
+router.put("/:id",PieceController.update);
 router.delete("/:id",PieceController.remove);
 export default router;
