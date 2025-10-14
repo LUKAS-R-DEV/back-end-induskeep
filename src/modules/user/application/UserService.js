@@ -5,41 +5,83 @@ import { signToken } from "../../../infrastructure/security/jwt.js";
 import { AppError } from "../../../shared/errors/AppError.js";
 
 export const UserService = {
+  // 📍 Lista todos os usuários
+  async list() {
+    try {
+      return await UserRepository.findAll();
+    } catch (error) {
+      console.error("❌ Erro ao listar usuários:", error);
+      throw new AppError("Erro interno ao listar usuários.", 500);
+    }
+  },
+
+  // 📍 Registra um novo usuário
   async register({ name, email, password, role }) {
-    const existing = await UserRepository.findByEmail(email);
-    if (existing) {
-      throw new AppError("E-mail já cadastrado.", 409); // ⚠️ 409 Conflict é o código correto
+    if (!name || !email || !password || !role) {
+      throw new AppError("Campos obrigatórios ausentes: name, email, password e role.", 400);
     }
 
-    const hashedPassword = await hashPassword(password);
-    const user = new User({ name, email, password: hashedPassword, role });
-    const created = await UserRepository.create(user);
+    const existing = await UserRepository.findByEmail(email);
+    if (existing) {
+      throw new AppError("E-mail já cadastrado.", 409);
+    }
 
-    return {
-      id: created.id,
-      name: created.name,
-      email: created.email,
-      role: created.role,
-    };
+    try {
+      const hashedPassword = await hashPassword(password);
+      const user = new User({ name, email, password: hashedPassword, role });
+      const created = await UserRepository.create(user);
+
+      return {
+        id: created.id,
+        name: created.name,
+        email: created.email,
+        role: created.role,
+      };
+    } catch (error) {
+      console.error("❌ Erro ao registrar usuário:", error);
+      throw new AppError("Erro interno ao registrar usuário.", 500);
+    }
   },
 
+  // 📍 Autentica usuário
   async login({ email, password }) {
+    if (!email || !password) {
+      throw new AppError("Email e senha são obrigatórios.", 400);
+    }
+
     const user = await UserRepository.findByEmail(email);
-    if (!user) throw new AppError("Credenciais inválidas.", 401); // ⚠️ 401 Unauthorized
+    if (!user) {
+      throw new AppError("Credenciais inválidas.", 401);
+    }
 
-    const valid = await comparePassword(password, user.password);
-    if (!valid) throw new AppError("Credenciais inválidas.", 401);
+    try {
+      const valid = await comparePassword(password, user.password);
+      if (!valid) {
+        throw new AppError("Credenciais inválidas.", 401);
+      }
 
-    const token = signToken({ id: user.id, role: user.role, email: user.email });
-    return {
-      token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
-    };
+      const token = signToken({ id: user.id, role: user.role, email: user.email });
+      return {
+        token,
+        user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      };
+    } catch (error) {
+      if (error instanceof AppError) throw error;
+      console.error("❌ Erro ao fazer login:", error);
+      throw new AppError("Erro interno ao fazer login.", 500);
+    }
   },
 
+  // 📍 Busca perfil do usuário
   async profile(id) {
+    if (!id) {
+      throw new AppError("ID do usuário não informado.", 400);
+    }
+
     const user = await UserRepository.findById(id);
-    if (!user) throw new AppError("Usuário não encontrado.", 404); // ⚠️ 404 Not Found
+    if (!user) {
+      throw new AppError("Usuário não encontrado.", 404);
+    }
 
     return {
       id: user.id,
@@ -47,5 +89,47 @@ export const UserService = {
       email: user.email,
       role: user.role,
     };
+  },
+
+  // 📍 Atualiza usuário
+  async update(id, data) {
+    if (!id) {
+      throw new AppError("ID do usuário não informado.", 400);
+    }
+    if (!Object.keys(data).length) {
+      throw new AppError("Nenhum dado informado para atualização.", 400);
+    }
+
+    const user = await UserRepository.findById(id);
+    if (!user) {
+      throw new AppError("Usuário não encontrado.", 404);
+    }
+
+    try {
+      return await UserRepository.update(id, data);
+    } catch (error) {
+      console.error("❌ Erro ao atualizar usuário:", error);
+      throw new AppError("Erro interno ao atualizar usuário.", 500);
+    }
+  },
+
+  // 📍 Remove usuário
+  async remove(id) {
+    if (!id) {
+      throw new AppError("ID do usuário não informado.", 400);
+    }
+
+    const user = await UserRepository.findById(id);
+    if (!user) {
+      throw new AppError("Usuário não encontrado.", 404);
+    }
+
+    try {
+      await UserRepository.delete(id);
+      return { message: "Usuário removido com sucesso." };
+    } catch (error) {
+      console.error("❌ Erro ao excluir usuário:", error);
+      throw new AppError("Erro interno ao excluir usuário.", 500);
+    }
   },
 };
