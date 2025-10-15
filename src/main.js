@@ -12,10 +12,9 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-// Prefixo global da API
 app.use("/api", router);
 
-// Middleware global de erros
+
 app.use(errorHandler);
 
 app.listen(env.PORT, () => {

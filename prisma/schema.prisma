@@ -132,6 +132,7 @@ model Schedule {
 model Notification {
   id             String           @id @default(uuid()) @db.Uuid
   message        String
+  title          String?   
   createdAt      DateTime         @default(now())
   read           Boolean          @default(false)
 

@@ -5,6 +5,7 @@ import { authMiddleware } from "../../../infrastructure/security/authMiddleware.
 const router=Router();
 router.use(authMiddleware);
 router.get("/",NotificationController.getAllByUser);
+router.get("/all",NotificationController.getAll);
 router.post("/",NotificationController.create);
 router.patch("/:id",NotificationController.markAsRead);
 router.delete("/:id",NotificationController.remove);

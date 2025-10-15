@@ -15,9 +15,23 @@ export const NotificationRepository={
             orderBy: { createdAt: "desc" },
         })
     },
+
+    async findAll(){
+      return await prisma.notification.findMany({
+        include:{
+                schedule:{
+                    include:{
+                        machine:true
+                    },
+                },
+            },
+            orderBy: { createdAt: "desc" },
+      })
+    },
     async create(data) {
   return await prisma.notification.create({
     data: {
+      title: data.title||"Notificação do sistema",
       message: data.message,
       read: data.read ?? false,
       createdAt: data.createdAt ?? new Date(),

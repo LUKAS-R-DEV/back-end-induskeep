@@ -1,6 +1,9 @@
 import { PieceRepository } from "../infrastructure/PieceRepository.js";
 import { Piece } from "../domain/Piece.js";
 import { AppError } from "../../../shared/errors/AppError.js";
+import { SettingsService } from "../../settings/application/SettingsService.js";
+import { NotificationService } from "../../notification/application/NotificationService.js";
+
 
 export const PieceService = {
   // 📍 Lista todas as peças
@@ -25,37 +28,63 @@ export const PieceService = {
     }
 
     try {
-      const piece = new Piece(data);
-      return await PieceRepository.create(piece);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      console.error("❌ Erro ao criar peça:", error);
-      throw new AppError("Erro interno ao criar peça.", 500);
-    }
+  const settings = await SettingsService.get();
+  const piece = new Piece(data);
+
+  console.log("⚙️ Quantidade:", piece.quantity);
+  console.log("⚙️ Estoque mínimo:", settings.minStockThreshold);
+
+  if (piece.quantity < settings.minStockThreshold) {
+    console.log("⚠️ Estoque baixo detectado — criando notificação...");
+    await NotificationService.create({
+      title: "Estoque baixo detectado",
+      message: `Peça "${piece.name}" (${piece.code}) abaixo do mínimo (${settings.minStockThreshold}).`,
+      userId: null,
+    });
+    console.log("✅ Notificação criada com sucesso!");
+  }
+
+  return await PieceRepository.create(piece);
+} catch (error) {
+  if (error instanceof AppError) throw error;
+  console.error("❌ Erro ao criar peça:", error);
+  throw new AppError("Erro interno ao criar peça.", 500);
+}
   },
 
   // 📍 Atualiza uma peça
-  async update(id, data) {
-    if (!id) {
-      throw new AppError("ID da peça não informado.", 400);
-    }
-    if (!Object.keys(data).length) {
-      throw new AppError("Nenhum dado informado para atualização.", 400);
+  // 📍 Atualiza uma peça
+async update(id, data) {
+  if (!id) throw new AppError("ID da peça não informado.", 400);
+  if (!Object.keys(data).length) throw new AppError("Nenhum dado informado para atualização.", 400);
+
+  const found = await PieceRepository.findById(id);
+  if (!found) throw new AppError("Peça não encontrada.", 404);
+
+  try {
+    const updated = await PieceRepository.update(id, data);
+    const settings = await SettingsService.get();
+
+    console.log("⚙️ Quantidade atualizada:", updated.quantity);
+    console.log("⚙️ Estoque mínimo:", settings.minStockThreshold);
+
+    if (updated.quantity < settings.minStockThreshold) {
+      console.log("⚠️ Estoque baixo detectado após atualização — criando notificação...");
+      await NotificationService.create({
+        title: "Estoque baixo após atualização",
+        message: `Peça "${updated.name}" (${updated.code}) abaixo do mínimo (${settings.minStockThreshold}).`,
+        userId: null,
+      });
+      console.log("✅ Notificação criada com sucesso após update!");
     }
 
-    const found = await PieceRepository.findById(id);
-    if (!found) {
-      throw new AppError("Peça não encontrada.", 404);
-    }
-
-    try {
-      return await PieceRepository.update(id, data);
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      console.error("❌ Erro ao atualizar peça:", error);
-      throw new AppError("Erro interno ao atualizar peça.", 500);
-    }
-  },
+    return updated;
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("❌ Erro ao atualizar peça:", error);
+    throw new AppError("Erro interno ao atualizar peça.", 500);
+  }
+},
 
   // 📍 Remove uma peça
   async remove(id) {

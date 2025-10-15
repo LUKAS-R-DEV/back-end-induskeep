@@ -30,25 +30,30 @@ export const NotificationService = {
 
   // 📍 Cria uma nova notificação
   async create(data) {
-    if (!data.title || !data.message) {
-      throw new AppError("Campos obrigatórios ausentes: title e message.", 400);
-    }
+  if (!data.message) {
+    throw new AppError("Campo obrigatório ausente: message.", 400);
+  }
 
-    if (!data.scheduleId && !data.userId) {
-      throw new AppError("Campos obrigatórios: scheduleId ou userId.", 400);
-    }
+  // Permite notificações automáticas sem userId/scheduleId
+  const notificationData = {
+    title: data.title || "Notificação do sistema",
+    message: data.message,
+    userId: data.userId || null,
+    scheduleId: data.scheduleId || null,
+    read: false,
+  };
 
-    try {
-      const notification = new Notification(data);
-      return await NotificationRepository.create(notification.toJSON());
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      console.error("❌ Erro ao criar notificação:", error);
-      throw new AppError("Erro interno ao criar notificação.", 500);
-    }
+  try {
+    const notification = new Notification(notificationData);
+    return await NotificationRepository.create(notification.toJSON());
+  } catch (error) {
+    if (error instanceof AppError) throw error;
+    console.error("❌ Erro ao criar notificação:", error);
+    throw new AppError("Erro interno ao criar notificação.", 500);
+  }
   },
 
-  // 📍 Atualiza uma notificação
+ 
   async update(id, data) {
     if (!id) {
       throw new AppError("ID da notificação não informado.", 400);
