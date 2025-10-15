@@ -1,4 +1,4 @@
-import { PasswordRecoveryService } from "../application/PasswordRecoveryController.js"
+import { PasswordRecoveryService } from "../application/PasswordRecoveryService.js"
 
 export const requestReset=async(req,res,next)=>{
     try{
