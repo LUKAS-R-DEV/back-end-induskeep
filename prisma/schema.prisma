@@ -181,3 +181,13 @@ model AuditLog {
   @@index([module, action, createdAt])
   @@index([userId, createdAt])
 }
+model Settings {
+  id                   String   @id @default(uuid()) @db.Uuid
+  minStockThreshold    Int      @default(5)
+  autoNotifyLowStock   Boolean  @default(true)
+  defaultRepairDuration Int?    // minutos
+  notificationEmail    String?  @unique
+  maintenanceWindow    String?  // ex: "08:00-18:00"
+  updatedAt            DateTime @updatedAt
+}
+

@@ -13,7 +13,7 @@ import passordRecoveryRoutes from "../../modules/auth/interface/passwordRecovery
 import analyticsRoutes from "../../modules/analytics/interface/analytics.routes.js";
 import auditRoutes from "../../modules/audit/interface/audit.routes.js";
 import exportRoutes from "../../modules/export/interface/export.routes.js";
-
+import emailRoutes from "../../modules/email/interface/email.routes.js";
 const router=Router();
 
 router.use("/auth",userRoutes);
@@ -30,6 +30,7 @@ router.use("/auth",passordRecoveryRoutes);
 router.use("/analytics",analyticsRoutes);
 router.use("/audit",auditRoutes);
 router.use("/export",exportRoutes);
+router.use("/email",emailRoutes);
 
 export default router;
 
