@@ -4,7 +4,10 @@ import { sanitize } from "../../../shared/sanitize.js";
 
 export const getAll=async (req,res,next)=>{
     try{
-        const data=await StockService.list();
+        const { startDate, endDate } = req.query;
+        const data = (startDate && endDate)
+          ? await StockService.findByPeriod(startDate, endDate)
+          : await StockService.list();
         res.status(200).json(data);
     }catch(err){
         next(err)

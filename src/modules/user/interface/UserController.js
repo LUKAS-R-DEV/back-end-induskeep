@@ -4,12 +4,9 @@ import { sanitize } from "../../../shared/sanitize.js";
 
 export const register = async (req, res, next) => {
     try {
-        if(req.user.role !== "ADMIN"){
-            return res.status(403).json({message:"Apenas Administradores podem registrar novos usuários"});
-        }
-        const user = await UserService.register(req.body);
+        const{name,email,password,role="TECHNICIAN"} = req.body
+        const user = await UserService.register({name,email,password,role});
         
-        // Log após o registro
         await AuditLogService.log({
             action: "CREATE",
             module: "USER",

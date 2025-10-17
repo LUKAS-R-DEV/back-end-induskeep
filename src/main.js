@@ -5,13 +5,13 @@ import morgan from "morgan";
 import env from "./infrastructure/config/env.js";
 import router from "./interface/routes/index.js";
 import { errorHandler } from "./interface/middlewares/errorHandler.js";
-
+import { auditMiddleware } from "./interface/middlewares/auditMiddleware.js";
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
-
+app.use(auditMiddleware);
 app.use("/api", router);
 
 

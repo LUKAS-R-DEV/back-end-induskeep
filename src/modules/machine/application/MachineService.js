@@ -20,8 +20,8 @@ export const MachineService = {
     }
 
     try {
-      const machine = new Machine(name, serial, location, userId);
-      return await MachineRepository.create(machine.toJson());
+      const machine = new Machine({ name, serial, location, userId });
+      return await MachineRepository.create(machine);
     } catch (error) {
       console.error("❌ Erro ao criar máquina:", error);
       throw new AppError("Erro interno ao criar máquina.", 500);

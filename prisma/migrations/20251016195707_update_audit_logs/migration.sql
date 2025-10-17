@@ -93,6 +93,7 @@ CREATE TABLE "Schedule" (
 CREATE TABLE "Notification" (
     "id" UUID NOT NULL,
     "message" TEXT NOT NULL,
+    "title" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "read" BOOLEAN NOT NULL DEFAULT false,
     "userId" UUID,
@@ -114,6 +115,46 @@ CREATE TABLE "StockMovement" (
     CONSTRAINT "StockMovement_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "PasswordResetToken" (
+    "id" UUID NOT NULL,
+    "token" TEXT NOT NULL,
+    "userId" UUID NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "PasswordResetToken_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "AuditLog" (
+    "id" UUID NOT NULL,
+    "userId" UUID,
+    "action" TEXT NOT NULL,
+    "module" TEXT,
+    "route" TEXT,
+    "method" TEXT,
+    "statusCode" INTEGER,
+    "ip" TEXT,
+    "payload" JSONB,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "AuditLog_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Settings" (
+    "id" UUID NOT NULL,
+    "minStockThreshold" INTEGER NOT NULL DEFAULT 5,
+    "autoNotifyLowStock" BOOLEAN NOT NULL DEFAULT true,
+    "defaultRepairDuration" INTEGER,
+    "notificationEmail" TEXT,
+    "maintenanceWindow" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Settings_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -125,6 +166,12 @@ CREATE UNIQUE INDEX "Piece_code_key" ON "Piece"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "History_orderId_key" ON "History"("orderId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "PasswordResetToken_token_key" ON "PasswordResetToken"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Settings_notificationEmail_key" ON "Settings"("notificationEmail");
 
 -- AddForeignKey
 ALTER TABLE "Machine" ADD CONSTRAINT "Machine_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -161,3 +208,9 @@ ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_pieceId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "StockMovement" ADD CONSTRAINT "StockMovement_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PasswordResetToken" ADD CONSTRAINT "PasswordResetToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "AuditLog" ADD CONSTRAINT "AuditLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;

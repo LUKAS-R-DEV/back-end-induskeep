@@ -15,7 +15,7 @@ import auditRoutes from "../../modules/audit/interface/audit.routes.js";
 import exportRoutes from "../../modules/export/interface/export.routes.js";
 import emailRoutes from "../../modules/email/interface/email.routes.js";
 import settingsRoutes from "../../modules/settings/interface/settings.routes.js";
-
+import dashboardRoutes from "../../modules/dashboard/interface/dashboard.routes.js";
 
 const router=Router();
 
@@ -35,6 +35,7 @@ router.use("/audit",auditRoutes);
 router.use("/export",exportRoutes);
 router.use("/email",emailRoutes);
 router.use("/settings",settingsRoutes);
+router.use("/dashboard",dashboardRoutes);
 
 export default router;
 
