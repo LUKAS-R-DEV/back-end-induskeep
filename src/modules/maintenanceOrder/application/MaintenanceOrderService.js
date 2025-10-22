@@ -15,7 +15,7 @@ export const MaintenanceOrderService = {
 
   // 📍 Cria uma nova ordem de manutenção
   async create(data) {
-    if (!data.machineId || !data.description || !data.priority) {
+    if (!data.machineId || !data.description ) {
       throw new AppError("Campos obrigatórios ausentes: machineId, description e priority.", 400);
     }
 

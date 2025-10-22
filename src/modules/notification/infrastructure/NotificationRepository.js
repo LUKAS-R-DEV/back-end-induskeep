@@ -28,6 +28,18 @@ export const NotificationRepository={
             orderBy: { createdAt: "desc" },
       })
     },
+    async findById(id){
+      return await prisma.notification.findUnique({
+        where:{ id },
+        include:{
+          schedule:{
+            include:{
+              machine:true
+            }
+          }
+        }
+      })
+    },
     async create(data) {
   return await prisma.notification.create({
     data: {
@@ -45,6 +57,12 @@ export const NotificationRepository={
   });
 },
 
+    async update(id, data){
+        return await prisma.notification.update({
+            where:{ id },
+            data
+        })
+    },
     async markAsRead(id){
         return await prisma.notification.update({where:{id},data:{read:true}})
     },

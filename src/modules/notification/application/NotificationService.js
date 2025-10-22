@@ -97,6 +97,11 @@ export const NotificationService = {
     }
   },
 
+  // Alias para manter compatibilidade com o controller
+  async remove(id) {
+    return this.delete(id);
+  },
+
   // 📍 Marca notificação como lida
   async markAsRead(id) {
     if (!id) {

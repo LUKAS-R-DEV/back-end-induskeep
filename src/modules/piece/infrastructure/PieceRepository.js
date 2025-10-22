@@ -16,6 +16,12 @@ export const PieceRepository={
     async update(id,data){
         return prisma.Piece.update({where:{id},data})
     },
+    async countOrderItemsByPieceId(pieceId){
+        return prisma.orderItem.count({ where: { pieceId } });
+    },
+    async countStockMovementsByPieceId(pieceId){
+        return prisma.stockMovement.count({ where: { pieceId } });
+    },
     async delete(id){
         return prisma.Piece.delete({where:{id}})
     }

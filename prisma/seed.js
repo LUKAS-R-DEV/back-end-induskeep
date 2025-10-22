@@ -143,12 +143,20 @@ async function main() {
   // =======================
   // 8️⃣ Histórico
   // =======================
-  await prisma.history.create({
-    data: {
-      notes: "Troca de correia realizada com sucesso.",
-      completedAt: new Date(),
-      orderId: order2.id,
-    },
+  await prisma.history.createMany({
+    data: [
+      {
+        notes: "Troca de correia realizada com sucesso.",
+        completedAt: new Date(),
+        orderId: order2.id,
+      },
+      {
+        notes: "Filtro substituído com sucesso.",
+        completedAt: new Date(),
+        orderId: order1.id,
+      }
+    ],
+    skipDuplicates: true,
   });
   console.log("✅ Histórico criado.");
 
@@ -176,8 +184,10 @@ async function main() {
   // =======================
   // 🔟 Configurações iniciais
   // =======================
-  const settings = await prisma.settings.create({
-    data: {
+  const settings = await prisma.settings.upsert({
+    where: { notificationEmail: "alerts@induskeep.com" },
+    update: {},
+    create: {
       minStockThreshold: 5,
       autoNotifyLowStock: true,
       defaultRepairDuration: 48,

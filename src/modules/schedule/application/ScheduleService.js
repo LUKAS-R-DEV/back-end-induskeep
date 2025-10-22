@@ -15,8 +15,8 @@ export const ScheduleService = {
 
   // 📍 Cria um novo agendamento
   async create(data) {
-    if (!data.machineId || !data.scheduledDate || !data.description) {
-      throw new AppError("Campos obrigatórios ausentes: machineId, scheduledDate e description.", 400);
+    if (!data.machineId || !data.date || !data.notes ) {
+      throw new AppError("Campos obrigatórios ausentes: machineId, scheduledDate e notes", 400);
     }
 
     try {

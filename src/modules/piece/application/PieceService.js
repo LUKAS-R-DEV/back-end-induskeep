@@ -98,6 +98,19 @@ async update(id, data) {
     }
 
     try {
+      // Verifica dependências antes de deletar
+      const [orderItemsCount, stockMovementsCount] = await Promise.all([
+        PieceRepository.countOrderItemsByPieceId(id),
+        PieceRepository.countStockMovementsByPieceId(id),
+      ]);
+
+      if (orderItemsCount > 0 || stockMovementsCount > 0) {
+        throw new AppError(
+          "Peça possui dependências (ordens/movimentações) e não pode ser removida.",
+          409
+        );
+      }
+
       await PieceRepository.delete(id);
       return { message: "Peça removida com sucesso." };
     } catch (error) {

@@ -46,6 +46,17 @@ export const StockRepository = {
     });
   },
 
+  async findByPiece(pieceId) {
+    return await prisma.stockMovement.findMany({
+      where: { pieceId },
+      include: {
+        piece: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { movedAt: "desc" },
+    });
+  },
+
   async findByPeriod(startDate, endDate) {
     return await prisma.stockMovement.findMany({
       where: {
