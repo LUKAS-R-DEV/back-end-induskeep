@@ -8,7 +8,8 @@ export const UserService = {
   // 📍 Lista todos os usuários
   async list() {
     try {
-      return await UserRepository.findAll();
+      return await UserRepository.findAll()
+   
     } catch (error) {
       console.error("❌ Erro ao listar usuários:", error);
       throw new AppError("Erro interno ao listar usuários.", 500);

@@ -23,6 +23,15 @@ export const register = async (req, res, next) => {
     }
 };
 
+export const getAll = async (req, res, next) => {
+    try {
+        const data = await UserService.list();
+        res.status(200).json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export const login = async (req, res, next) => {
     try {
         const data = await UserService.login(req.body);

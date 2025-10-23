@@ -30,7 +30,7 @@ export const EmailAdapter = {
         {
           sender: {
             name: "IndusKeep System",
-            email: process.env.MAIL_SENDER || "no-reply@induskeep.com",
+            email: process.env.MAIL_SENDER || "induskeep@gmail.com",
           },
           to: [{ email: to }],
           subject,
