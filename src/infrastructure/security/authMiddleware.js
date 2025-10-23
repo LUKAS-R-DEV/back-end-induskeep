@@ -1,7 +1,8 @@
 // src/infrastructure/security/authMiddleware.js
 import { verifyToken } from "./jwt.js";
+import prisma from "../database/prismaClient.js";
 
-export const authMiddleware = (req, res, next) => {
+export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -17,7 +18,21 @@ export const authMiddleware = (req, res, next) => {
     }
 
     const decoded = verifyToken(token);
-    req.user = decoded; // injeta dados do usuário autenticado (id, role, email)
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: { id: true, role: true, email: true, isActive: true },
+    });
+
+    if (!dbUser) {
+      return res.status(401).json({ error: "Usuário não encontrado." });
+    }
+
+    if (dbUser.isActive === false) {
+      return res.status(403).json({ error: "Usuário inativo." });
+    }
+
+    req.user = { id: dbUser.id, role: dbUser.role, email: dbUser.email };
     next();
   } catch (err) {
     return res.status(401).json({ error: "Token inválido ou expirado." });

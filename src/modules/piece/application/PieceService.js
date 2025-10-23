@@ -35,13 +35,14 @@ export const PieceService = {
   console.log("⚙️ Estoque mínimo:", settings.minStockThreshold);
 
   if (piece.quantity < settings.minStockThreshold) {
-    console.log("⚠️ Estoque baixo detectado — criando notificação...");
-    await NotificationService.create({
+    console.log("⚠️ Estoque baixo detectado — criando notificação (deduplicada)...");
+    await NotificationService.createIfNotExists({
       title: "Estoque baixo detectado",
       message: `Peça "${piece.name}" (${piece.code}) abaixo do mínimo (${settings.minStockThreshold}).`,
       userId: null,
+      windowMinutes: 1440,
     });
-    console.log("✅ Notificação criada com sucesso!");
+    console.log("✅ Notificação processada!");
   }
 
   return await PieceRepository.create(piece);
@@ -69,13 +70,14 @@ async update(id, data) {
     console.log("⚙️ Estoque mínimo:", settings.minStockThreshold);
 
     if (updated.quantity < settings.minStockThreshold) {
-      console.log("⚠️ Estoque baixo detectado após atualização — criando notificação...");
-      await NotificationService.create({
+      console.log("⚠️ Estoque baixo detectado após atualização — criando notificação (deduplicada)...");
+      await NotificationService.createIfNotExists({
         title: "Estoque baixo após atualização",
         message: `Peça "${updated.name}" (${updated.code}) abaixo do mínimo (${settings.minStockThreshold}).`,
         userId: null,
+        windowMinutes: 1440,
       });
-      console.log("✅ Notificação criada com sucesso após update!");
+      console.log("✅ Notificação processada após update!");
     }
 
     return updated;

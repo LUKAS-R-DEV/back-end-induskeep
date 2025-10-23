@@ -55,6 +55,10 @@ export const UserService = {
       throw new AppError("Credenciais inválidas.", 401);
     }
 
+    if (user.isActive === false) {
+      throw new AppError("Usuário inativo.", 403);
+    }
+
     try {
       const valid = await comparePassword(password, user.password);
       if (!valid) {
@@ -114,23 +118,4 @@ export const UserService = {
     }
   },
 
-  // 📍 Remove usuário
-  async remove(id) {
-    if (!id) {
-      throw new AppError("ID do usuário não informado.", 400);
-    }
-
-    const user = await UserRepository.findById(id);
-    if (!user) {
-      throw new AppError("Usuário não encontrado.", 404);
-    }
-
-    try {
-      await UserRepository.delete(id);
-      return { message: "Usuário removido com sucesso." };
-    } catch (error) {
-      console.error("❌ Erro ao excluir usuário:", error);
-      throw new AppError("Erro interno ao excluir usuário.", 500);
-    }
-  },
-};
+}

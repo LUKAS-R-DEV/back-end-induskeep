@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import * as NotificationController from "./NotificationController.js";
 import { authMiddleware } from "../../../infrastructure/security/authMiddleware.js";
+import { requireAdmin } from "../../../infrastructure/security/requireAdmin.js";
 
 const router=Router();
 router.use(authMiddleware);
@@ -9,4 +10,6 @@ router.get("/all",NotificationController.getAll);
 router.post("/",NotificationController.create);
 router.patch("/:id",NotificationController.markAsRead);
 router.delete("/:id",NotificationController.remove);
+// Admin: executar jobs manualmente
+router.post("/run-jobs", requireAdmin, NotificationController.runJobs);
 export default router

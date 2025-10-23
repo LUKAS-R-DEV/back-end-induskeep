@@ -13,6 +13,21 @@ export const NotificationService = {
     }
   },
 
+  // 📍 Cria notificação se não houver outra igual recente
+  async createIfNotExists({ title, message, userId = null, scheduleId = null, windowMinutes = 1440 }) {
+    if (!message) {
+      throw new AppError("Campo obrigatório ausente: message.", 400);
+    }
+
+    const since = new Date(Date.now() - windowMinutes * 60 * 1000);
+    const existing = await NotificationRepository.findRecent({ title: title || "Notificação do sistema", message, since });
+    if (existing) {
+      return existing;
+    }
+
+    return this.create({ title, message, userId, scheduleId });
+  },
+
   // 📍 Lista notificações por usuário
   async listByUser(userId) {
     if (!userId) {

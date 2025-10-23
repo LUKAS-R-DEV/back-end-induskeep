@@ -1,6 +1,8 @@
 import { ScheduleRepository } from "../infrastructure/ScheduleRepository.js";
 import { Schedule } from "../domain/Schedule.js";
 import { AppError } from "../../../shared/errors/AppError.js";
+import { MachineRepository } from "../../machine/infrastructure/MachineRepository.js";
+import { NotificationService } from "../../notification/application/NotificationService.js";
 
 export const ScheduleService = {
   // 📍 Lista todos os agendamentos
@@ -16,12 +18,34 @@ export const ScheduleService = {
   // 📍 Cria um novo agendamento
   async create(data) {
     if (!data.machineId || !data.date || !data.notes ) {
-      throw new AppError("Campos obrigatórios ausentes: machineId, scheduledDate e notes", 400);
+      throw new AppError("Campos obrigatórios ausentes: machineId, date e notes", 400);
+    }
+    let machine = null;
+    if (data.machineId) {
+      machine = await MachineRepository.findById(data.machineId);
+      if (!machine) {
+        throw new AppError("Máquina nao encontrada.", 404);
+      }
     }
 
     try {
       const schedule = new Schedule(data);
-      return await ScheduleRepository.create(schedule.toJson());
+      const created = await ScheduleRepository.create(schedule.toJson());
+
+      // Notificação imediata de criação do agendamento (deduplicada por 60 minutos)
+      try {
+        await NotificationService.createIfNotExists({
+          title: "Agendamento criado",
+          message: `Agendamento #${created.id} para a máquina "${machine?.name ?? ""}" em ${new Date(created.date).toISOString()}`,
+          userId: created.userId ?? null,
+          scheduleId: created.id,
+          windowMinutes: 60,
+        });
+      } catch (_) {
+        // Não quebrar fluxo do create por falha de notificação
+      }
+
+      return created;
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao criar agendamento:", error);

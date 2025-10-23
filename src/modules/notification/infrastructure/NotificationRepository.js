@@ -40,6 +40,17 @@ export const NotificationRepository={
         }
       })
     },
+    // Busca notificações recentes com mesmo título e mensagem desde uma data
+    async findRecent({ title, message, since }){
+      return await prisma.notification.findFirst({
+        where:{
+          title,
+          message,
+          createdAt: { gte: since }
+        },
+        orderBy: { createdAt: "desc" }
+      })
+    },
     async create(data) {
   return await prisma.notification.create({
     data: {

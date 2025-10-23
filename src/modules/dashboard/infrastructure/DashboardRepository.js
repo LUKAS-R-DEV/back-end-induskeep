@@ -2,18 +2,44 @@ import prisma from "../../../infrastructure/database/prismaClient.js";
 
 export const DashboardRepository = {
     async getSumary(){
-        const totalMachines = await prisma.machine.count();
-        const totalOrders = await prisma.maintenanceOrder.count();
-        const pendingOrders = await prisma.maintenanceOrder.count({ where: { status: "PENDING" } });
-        const completedOrders=await prisma.maintenanceOrder.count({ where: { status: "COMPLETED" } });
-        const totalPieces=await prisma.piece.count();
+        const [
+            totalMachines,
+            totalOrders,
+            pendingOrders,
+            completedOrders,
+            totalPieces,
+            settings,
+        ] = await Promise.all([
+            prisma.machine.count(),
+            prisma.maintenanceOrder.count(),
+            prisma.maintenanceOrder.count({ where: { status: "PENDING" } }),
+            prisma.maintenanceOrder.count({ where: { status: "COMPLETED" } }),
+            prisma.piece.count(),
+            prisma.settings.findFirst(),
+        ]);
+
+        let overdueOrders = 0;
+        const durationMin = settings?.defaultRepairDuration || 0;
+        if (durationMin > 0) {
+            const threshold = new Date(Date.now() - durationMin * 60 * 1000);
+            overdueOrders = await prisma.maintenanceOrder.count({
+                where: {
+                    status: { not: "COMPLETED" },
+                    createdAt: { lte: threshold },
+                },
+            });
+        }
+
+        const completionRate = totalOrders > 0 ? Number((completedOrders / totalOrders).toFixed(2)) : 0;
 
         return {
             totalMachines,
             totalOrders,
             pendingOrders,
             completedOrders,
-            totalPieces
+            totalPieces,
+            overdueOrders,
+            completionRate,
         }
     },
     async getLowStockPieces(){

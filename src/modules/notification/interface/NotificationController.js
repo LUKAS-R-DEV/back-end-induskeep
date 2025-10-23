@@ -1,4 +1,5 @@
 import {NotificationService} from "../application/NotificationService.js";
+import { sendScheduleReminders, notifyOverdueOrders, sendDailyDigest } from "../../../jobs/notificationJobs.js";
 
 export const getAllByUser = async (req, res, next) => {
     try {
@@ -49,5 +50,19 @@ export const remove=async(req,res,next)=>{
     res.status(201).json(deleted);
     }catch(err){
         next(err)
+    }
+};
+
+// Admin: executa jobs de notificação manualmente
+export const runJobs = async (req, res, next) => {
+    try {
+        const [reminders, overdue, digest] = await Promise.all([
+            sendScheduleReminders(),
+            notifyOverdueOrders(),
+            sendDailyDigest(),
+        ]);
+        res.status(200).json({ reminders, overdue, digest });
+    } catch (err) {
+        next(err);
     }
 };

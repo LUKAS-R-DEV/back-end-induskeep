@@ -1,12 +1,14 @@
 import { ExportRepository } from "../infrastructure/ExportRepository.js";
 import { JsonFormatter } from "../infrastructure/formatters/JsonFormatter.js";
 import { CsvFormatter } from "../infrastructure/formatters/CsvFormatter.js";
+import { PdfFormatter } from "../infrastructure/formatters/PdfFormatter.js";
 import { ExportTask } from "../domain/ExportTask.js";
 import { AppError } from "../../../shared/errors/AppError.js";
 
 const FORMATTERS = {
   json: JsonFormatter,
   csv: CsvFormatter,
+  pdf: PdfFormatter,
 };
 
 export const ExportService = {
@@ -35,7 +37,7 @@ export const ExportService = {
 
       
       const formatter = FORMATTERS[fmt];
-      const content = formatter.format(data);
+      const content = await formatter.format(data);
 
      
       return {
