@@ -19,6 +19,11 @@ import dashboardRoutes from "../../modules/dashboard/interface/dashboard.routes.
 
 const router=Router();
 
+// Healthcheck simples via /api/health
+router.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', scope: 'api', time: new Date().toISOString() });
+});
+
 router.use("/auth",userRoutes);
 router.use("/machines",machineRoutes);
 router.use("/pieces",pieceRoutes);

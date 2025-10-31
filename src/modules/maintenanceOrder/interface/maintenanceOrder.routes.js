@@ -7,6 +7,7 @@ const router = Router();
 router.use(authMiddleware);
 
 router.get("/", MaintenanceOrderController.getAll);
+router.get("/:id", MaintenanceOrderController.getById);
 router.post("/", MaintenanceOrderController.create);
 router.put("/:id", MaintenanceOrderController.update);
 router.delete("/:id", MaintenanceOrderController.remove);

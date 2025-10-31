@@ -15,7 +15,7 @@ export const create = async (req, res, next) => {
   try {
     const data = {
       ...req.body,
-      userId: req.user?.id, // vem do token
+      userId: req.user?.id,
     };
 
     const order = await MaintenanceOrderService.create(data);
@@ -76,6 +76,15 @@ export const remove = async (req, res, next) => {
     });
 
     res.status(200).json(deleted);
+  } catch (err) {
+    next(err);
+  }
+};
+export const getById = async (req, res, next) => {
+  try {
+    const id = req.params.id.replace(/['"]+/g, "");
+    const order = await MaintenanceOrderService.findById(id);
+    res.status(200).json(order);
   } catch (err) {
     next(err);
   }
