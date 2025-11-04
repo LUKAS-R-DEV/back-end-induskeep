@@ -39,9 +39,7 @@ export const ReportService = {
   async getHistory(startDate, endDate) {
     try {
       const filters = {
-        where: {
-          completedAt: {},
-        },
+        where: {},
         include: {
           order: {
             include: {
@@ -53,16 +51,14 @@ export const ReportService = {
         orderBy: { completedAt: "desc" },
       };
 
-      if (startDate) {
-        filters.where.completedAt = {
-          gte: new Date(startDate)
-        };
-      }
-      if (endDate) {
-        filters.where.completedAt = {
-          ...filters.where.completedAt,
-          lte: new Date(endDate)
-        };
+      if (startDate || endDate) {
+        filters.where.completedAt = {};
+        if (startDate) {
+          filters.where.completedAt.gte = new Date(startDate);
+        }
+        if (endDate) {
+          filters.where.completedAt.lte = new Date(endDate);
+        }
       }
 
       return await prisma.history.findMany(filters);

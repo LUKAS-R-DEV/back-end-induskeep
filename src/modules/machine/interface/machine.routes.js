@@ -9,4 +9,5 @@ router.get("/",MachineController.getAll);
 router.post("/",MachineController.create);
 router.put("/:id",MachineController.update);
 router.delete("/:id",MachineController.remove);
+router.get("/:id",MachineController.getById);
 export default router

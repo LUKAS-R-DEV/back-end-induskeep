@@ -21,6 +21,11 @@ export const ExportRepository = {
         return prisma.history.findMany({
           include: { order: { include: { user: true, machine: true } } },
         });
+      case "reports":
+        // Por padrão exporta o histórico completo, alinhado com a página de Relatórios
+        return prisma.history.findMany({
+          include: { order: { include: { user: true, machine: true } } },
+        });
       default:
         throw new Error(`Módulo não suportado: ${module}`);
     }

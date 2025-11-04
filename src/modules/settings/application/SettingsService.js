@@ -6,16 +6,18 @@ export const SettingsService = {
   async get() {
     const settings = await SettingsRepository.get();
     
-    
     if (!settings) {
       const defaults = new Settings({});
       return defaults.toJson();
     }
 
-    
+    // Retorna os dados do banco com valores padrão para campos null
     const merged = new Settings({
-      ...new Settings({}),
-      ...settings,
+      minStockThreshold: settings.minStockThreshold ?? 5,
+      autoNotifyLowStock: settings.autoNotifyLowStock ?? true,
+      defaultRepairDuration: settings.defaultRepairDuration ?? null,
+      notificationEmail: settings.notificationEmail ?? "",
+      maintenanceWindow: settings.maintenanceWindow ?? "08:00-18:00"
     });
 
     return merged.toJson();

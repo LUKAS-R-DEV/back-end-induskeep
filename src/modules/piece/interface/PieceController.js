@@ -74,3 +74,13 @@ export const remove = async (req, res, next) => {
         next(err);
     }
 };
+
+export const getById = async (req, res, next) => {
+    try {
+        const id = req.params.id.replace(/['"]+/g, "");
+        const piece = await PieceService.findById(id);
+        res.status(200).json(piece);
+    } catch (err) {
+        next(err);
+    }
+};

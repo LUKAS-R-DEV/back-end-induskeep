@@ -59,7 +59,6 @@ model MaintenanceOrder {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relações
   user      User        @relation(fields: [userId], references: [id])
   userId    String      @db.Uuid
   machine   Machine     @relation(fields: [machineId], references: [id])
@@ -69,16 +68,17 @@ model MaintenanceOrder {
 }
 
 model OrderItem {
-  id       String   @id @default(uuid()) @db.Uuid
-  quantity Int      @default(1)
-  usedAt   DateTime @default(now())
+  id        String           @id @default(uuid()) @db.Uuid
+  quantity  Int              @default(1)
+  usedAt    DateTime         @default(now())
 
   // Relações
-  order   MaintenanceOrder @relation(fields: [orderId], references: [id])
-  orderId String           @db.Uuid
-  piece   Piece            @relation(fields: [pieceId], references: [id])
-  pieceId String           @db.Uuid
+  order     MaintenanceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)  // ✅ adicione aqui
+  orderId   String           @db.Uuid
+  piece     Piece            @relation(fields: [pieceId], references: [id])
+  pieceId   String           @db.Uuid
 }
+
 
 model Piece {
   id             String          @id @default(uuid()) @db.Uuid
@@ -101,7 +101,7 @@ model History {
   notes       String?
 
   // Relações
-  order   MaintenanceOrder @relation(fields: [orderId], references: [id])
+  order   MaintenanceOrder @relation(fields: [orderId], references: [id],onDelete:Cascade)
   orderId String           @unique @db.Uuid
 }
 

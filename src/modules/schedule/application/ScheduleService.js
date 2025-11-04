@@ -31,20 +31,6 @@ export const ScheduleService = {
     try {
       const schedule = new Schedule(data);
       const created = await ScheduleRepository.create(schedule.toJson());
-
-      // Notificação imediata de criação do agendamento (deduplicada por 60 minutos)
-      try {
-        await NotificationService.createIfNotExists({
-          title: "Agendamento criado",
-          message: `Agendamento #${created.id} para a máquina "${machine?.name ?? ""}" em ${new Date(created.date).toISOString()}`,
-          userId: created.userId ?? null,
-          scheduleId: created.id,
-          windowMinutes: 60,
-        });
-      } catch (_) {
-        // Não quebrar fluxo do create por falha de notificação
-      }
-
       return created;
     } catch (error) {
       if (error instanceof AppError) throw error;

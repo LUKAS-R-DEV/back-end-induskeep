@@ -6,7 +6,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/", StockController.getAll);
+router.get("/movements", StockController.getAll);
 router.get("/piece/:pieceId", StockController.getByPiece);
 router.post("/", StockController.create);
 

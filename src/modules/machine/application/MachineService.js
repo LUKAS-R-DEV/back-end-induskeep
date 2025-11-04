@@ -62,4 +62,16 @@ export const MachineService = {
       throw new AppError("Erro interno ao excluir máquina.", 500);
     }
   },
+
+async findById(id){
+  if(!id) throw new AppError("ID da máquina nao informado.", 400);
+  try {
+    const machine = await MachineRepository.findById(id);
+    if(!machine) throw new AppError("Máquina nao encontrada.", 404);
+    return machine
+  } catch (error) {
+    console.error("❌ Erro ao buscar máquina:", error);
+    throw new AppError("Erro interno ao buscar máquina.", 500);
+  }
+}
 };

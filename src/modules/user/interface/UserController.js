@@ -180,3 +180,13 @@ export const logout = async (req, res, next) => {
 
 };
 
+export const getById = async (req, res, next) => {
+    try {
+        const id = req.params.id.replace(/['"]+/g, "");
+        const user = await UserService.findById(id);
+        res.status(200).json(user);
+    } catch (err) {
+        next(err);
+    }
+};
+

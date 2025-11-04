@@ -8,6 +8,7 @@ const router=Router();
 router.use(authMiddleware);
 
 router.get("/",PieceController.getAll);
+router.get("/:id", validateUuidParam(), PieceController.getById);
 router.post("/",PieceController.create);
 router.put("/:id", validateUuidParam(), PieceController.update);
 router.delete("/:id", validateUuidParam(), PieceController.remove);

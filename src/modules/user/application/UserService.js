@@ -16,6 +16,19 @@ export const UserService = {
     }
   },
 
+  async findById(id) {
+    try {
+      if(!id) throw new AppError("ID do usuário nao informado.", 400);
+
+      const user=await UserRepository.findById(id)
+      if(!user) throw new AppError("Usuário nao encontrado.", 404);
+      return user
+    } catch (error) {
+      console.error("❌ Erro ao buscar usuário:", error);
+      throw new AppError("Erro interno ao buscar usuário.", 500);
+    }
+  },
+
   // 📍 Registra um novo usuário
   async register({ name, email, password, role }) {
     if (!name || !email || !password || !role) {
