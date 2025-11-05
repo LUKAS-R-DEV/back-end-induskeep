@@ -7,7 +7,10 @@ export function requireAdmin(req, res, next) {
       throw new AppError("Usuário não autenticado.", 401);
     }
 
-    if (req.user.role !== "ADMIN") {
+    // Comparação case-insensitive para garantir que funcione mesmo se o role estiver em minúsculas
+    const userRole = String(req.user.role || '').toUpperCase().trim();
+    
+    if (userRole !== "ADMIN") {
       throw new AppError("Acesso restrito a administradores.", 403);
     }
 
