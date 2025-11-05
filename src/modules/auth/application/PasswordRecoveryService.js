@@ -15,7 +15,7 @@ export const PasswordRecoveryService = {
 
   async requestReset(email) {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) throw new AppError("Usuário não encontrado.", 404);
+    if (!user) return{message:"Se esse email existir, enviaremos instruções."}
 
     
     await PasswordRecoveryRepository.deleteByUser(user.id);
@@ -33,7 +33,7 @@ export const PasswordRecoveryService = {
     await PasswordRecoveryRepository.create(resetToken.toJson());
 
     
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    const resetUrl = `${process.env.FRONTEND_URL}/resetSenha?token=${token}`;
 
     const html=buildEmailTemplate({
       title: "Recuperação de Senha",
@@ -51,17 +51,7 @@ export const PasswordRecoveryService = {
     await EmailAdapter.sendEmail({
       to: user.email,
       subject: "🔐 Recuperação de Senha - IndusKeep",
-      html: `
-        <h2>Olá, ${user.name}</h2>
-        <p>Você solicitou a redefinição de senha no sistema <strong>IndusKeep</strong>.</p>
-        <p>Clique no botão abaixo para definir uma nova senha (válido por 15 minutos):</p>
-        <a href="${resetUrl}" 
-          style="display:inline-block;padding:10px 20px;background:#0066cc;color:#fff;text-decoration:none;border-radius:6px;"
-          target="_blank">Redefinir Senha</a>
-        <p>Se você não solicitou essa ação, ignore este e-mail.</p>
-        <br/>
-        <small>Este link expira em 15 minutos.</small>
-      `,
+      html
     });
 
     return {
@@ -79,6 +69,7 @@ export const PasswordRecoveryService = {
     if (record.expiresAt < new Date()) {
       throw new AppError("Token expirado. Solicite uma nova recuperação.", 400);
     }
+    if(newPassword.length<8) throw new AppError("A senha deve ter pelo menos 8 caracteres.", 400)
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 

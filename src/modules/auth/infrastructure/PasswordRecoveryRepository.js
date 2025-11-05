@@ -13,5 +13,9 @@ export const PasswordRecoveryRepository = {
         return await prisma.passwordResetToken.deleteMany({ where: { userId } });
     },
 
+    async deletedExpired(){
+        return prisma.passwordResetToken.deleteMany({ where: { expiresAt: { lt: new Date() } } });
 
-};
+    }
+
+}

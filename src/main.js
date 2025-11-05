@@ -6,6 +6,7 @@ import helmet from "helmet";
 import compression from "compression";
 import path from "path";
 import { fileURLToPath } from "url";
+import { registerCronJobs } from "./infrastructure/cronScheduler.js";
 import cron from "node-cron";
 
 import env from "./infrastructure/config/env.js";
@@ -18,7 +19,6 @@ import {
   sendDailyDigest,
 } from "./jobs/notificationJobs.js";
 
-// ================== CONFIGURAÇÃO BASE ==================
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,7 +33,7 @@ app.use(
 );
 app.use(compression());
 
-// ================== CORS SEGURO ==================
+
 const allowedOrigins = [
   env.FRONTEND_URL,            // domínio configurado no .env
   "http://localhost:5173",     // ambiente dev
@@ -89,38 +89,8 @@ const server = app.listen(env.PORT, () => {
   console.log(`✅ API rodando em http://localhost:${env.PORT}`);
   console.log(`🌐 Permitindo origem: ${env.FRONTEND_URL}`);
 });
+registerCronJobs();
 
-// ================== JOBS DIÁRIOS (08:00 America/Recife) ==================
-let dailyTask;
-try {
-  dailyTask = cron.schedule(
-    "0 8 * * *",
-    async () => {
-      try {
-        console.log(
-          `[${new Date().toLocaleString("pt-BR")}] ⏰ Executando jobs de notificação...`
-        );
-        const [reminders, overdue, digest] = await Promise.all([
-          sendScheduleReminders(),
-          notifyOverdueOrders(),
-          sendDailyDigest(),
-        ]);
-        console.log("✅ Jobs executados:", { reminders, overdue, digest });
-      } catch (e) {
-        console.error("❌ Falha ao executar jobs de notificação:", e);
-      }
-    },
-    {
-      scheduled: true,
-      timezone: "America/Recife",
-    }
-  );
-  console.log("🗓️ Jobs diários agendados para 08:00 America/Recife");
-} catch (e) {
-  console.error("❌ Erro ao agendar jobs diários:", e);
-}
-
-// ================== ENCERRAMENTO GRACIOSO ==================
 const shutdown = async (signal) => {
   console.log(`\n${signal} recebido. Encerrando...`);
   try {
