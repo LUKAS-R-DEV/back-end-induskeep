@@ -23,7 +23,7 @@ export function registerCronJobs(){
         try{
         const cutoff=new Date();
         cutoff.setMonth(cutoff.getMonth()-3);
-        const result=await AuditLogRepository.pulgerOlderThan(cutoff.toISOString());
+        const result=await AuditLogRepository.purgeOlderThan(cutoff.toISOString());
         console.log("✅ LOGS antigos Limpo:",result);
     }catch(err){
         console.error("❌ Erro ao limpar audit logs:",err.message);

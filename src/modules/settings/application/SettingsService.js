@@ -25,7 +25,9 @@ export const SettingsService = {
 
   async update(data) {
     try {
+      console.log('🔧 SettingsService.update recebeu:', data);
       const updated = await SettingsRepository.update(data);
+      console.log('✅ SettingsRepository retornou:', updated);
       return updated;
     } catch (error) {
       console.error("❌ Erro ao atualizar configurações:", error);

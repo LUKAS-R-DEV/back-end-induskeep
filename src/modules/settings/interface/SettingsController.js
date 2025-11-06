@@ -11,9 +11,12 @@ export const getSettings=async(req,res,next)=>{
 
 export const updateSettings=async(req,res,next)=>{
     try{
+        console.log('📥 Recebendo atualização de configurações:', req.body);
         const updated=await SettingsService.update(req.body);
+        console.log('✅ Configurações atualizadas com sucesso:', updated);
         res.status(200).json(updated);
     }catch(err){
+        console.error('❌ Erro ao atualizar configurações:', err);
         next(err)
     }
 }
