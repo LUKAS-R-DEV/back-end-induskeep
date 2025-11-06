@@ -4,7 +4,7 @@ import { sanitize } from "../../../shared/sanitize.js";
 
 export const getAll = async (req, res, next) => {
   try {
-    const data = await MaintenanceOrderService.list();
+    const data = await MaintenanceOrderService.list(req.user);
     res.status(200).json(data);
   } catch (err) {
     next(err);
@@ -13,9 +13,16 @@ export const getAll = async (req, res, next) => {
 
 export const create = async (req, res, next) => {
   try {
+    const userRole = req.user?.role ? String(req.user.role).toUpperCase().trim() : '';
+    const isSupervisorOrAdmin = userRole === "SUPERVISOR" || userRole === "ADMIN";
+    
+    // Se for supervisor/admin e tiver userId no body, usa o userId do body (técnico responsável)
+    // Se não tiver userId no body, usa o próprio usuário (quando técnico cria para si mesmo)
+    // Se for técnico, usa o userId do body se existir (ex: quando inicia de agendamento), senão usa o próprio id
     const data = {
       ...req.body,
-      userId: req.user?.id,
+      userId: req.body.userId || req.user?.id, // Sempre usa userId do body se existir (ex: agendamento), senão usa quem está criando
+      createdById: req.user?.id, // Sempre salva quem criou a ordem
     };
 
     const order = await MaintenanceOrderService.create(data);
@@ -40,7 +47,7 @@ export const create = async (req, res, next) => {
 export const update = async (req, res, next) => {
   try {
     const id = req.params.id.replace(/['"]+/g, "");
-    const order = await MaintenanceOrderService.update(id, req.body);
+    const order = await MaintenanceOrderService.update(id, req.body, req.user);
     
     // Log após a atualização
     await AuditLogService.log({
@@ -83,7 +90,7 @@ export const remove = async (req, res, next) => {
 export const getById = async (req, res, next) => {
   try {
     const id = req.params.id.replace(/['"]+/g, "");
-    const order = await MaintenanceOrderService.findById(id);
+    const order = await MaintenanceOrderService.findById(id, req.user);
     res.status(200).json(order);
   } catch (err) {
     next(err);

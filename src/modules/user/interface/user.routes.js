@@ -2,11 +2,13 @@ import {Router} from 'express';
 import * as UserController from "./UserController.js";
 import { authMiddleware } from "../../../infrastructure/security/authMiddleware.js";
 import { requireAdmin } from '../../../infrastructure/security/requireAdmin.js';
+import { requireSupervisorOrAdmin } from '../../../infrastructure/security/requireSupervisorOrAdmin.js';
 const router=Router();
 router.post("/register",authMiddleware,requireAdmin,UserController.register);
 router.post("/login",UserController.login);
 router.get("/users/:id",authMiddleware,requireAdmin,UserController.getById);
 router.get("/users",authMiddleware,requireAdmin,UserController.getAll);
+router.get("/technicians",authMiddleware,requireSupervisorOrAdmin,UserController.getTechnicians); // Supervisor e Admin podem ver técnicos
 router.get("/me",authMiddleware,UserController.profile);
 router.put("/users/:id",authMiddleware,requireAdmin,UserController.adminUpdate);
 router.post("/users/:id/deactivate",authMiddleware,requireAdmin,UserController.deactivate);

@@ -11,7 +11,7 @@ export const getAll=async (req,res,next)=>{
 
 export const create=async(req,res,next)=>{
     try{
-    const history=await HistoryService.create(req.body);
+    const history=await HistoryService.create(req.body, req.user);
     res.status(201).json(history);
     }catch(err){
         next(err)

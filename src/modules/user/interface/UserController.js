@@ -190,3 +190,13 @@ export const getById = async (req, res, next) => {
     }
 };
 
+// Lista apenas técnicos (para supervisor e admin atribuírem ordens)
+export const getTechnicians = async (req, res, next) => {
+    try {
+        const data = await UserService.listTechnicians();
+        res.status(200).json(data);
+    } catch (err) {
+        next(err);
+    }
+};
+

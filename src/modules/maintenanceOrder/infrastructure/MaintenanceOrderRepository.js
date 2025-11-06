@@ -1,11 +1,14 @@
 import prisma from "../../../infrastructure/database/prismaClient.js";
 
 export const MaintenanceOrderRepository = {
-  async findAll() {
+  async findAll(userId = null) {
+    const where = userId ? { userId } : {};
     return await prisma.maintenanceOrder.findMany({
+      where,
       include: {
         machine: true,
         user: { select: { id: true, name: true, email: true } },
+        createdBy: { select: { id: true, name: true, email: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -17,6 +20,7 @@ export const MaintenanceOrderRepository = {
       include: {
         machine: true,
         user: { select: { id: true, name: true, email: true } },
+        createdBy: { select: { id: true, name: true, email: true } },
       },
     });
   },

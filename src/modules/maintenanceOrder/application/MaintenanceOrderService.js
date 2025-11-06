@@ -1,12 +1,17 @@
 import { MaintenanceOrderRepository } from "../infrastructure/MaintenanceOrderRepository.js";
 import { MaintenanceOrder } from "../domain/MaintenanceOrder.js";
 import { AppError } from "../../../shared/errors/AppError.js";
+import { MachineRepository } from "../../machine/infrastructure/MachineRepository.js";
+import { NotificationService } from "../../notification/application/NotificationService.js";
 
 export const MaintenanceOrderService = {
   // 📍 Lista todas as ordens de manutenção
-  async list() {
+  async list(user = null) {
     try {
-      return await MaintenanceOrderRepository.findAll();
+      // Se for técnico, filtra apenas ordens atribuídas a ele
+      const userRole = user ? String(user.role || '').toUpperCase().trim() : '';
+      const userId = userRole === "TECHNICIAN" ? user.id : null;
+      return await MaintenanceOrderRepository.findAll(userId);
     } catch (error) {
       console.error("❌ Erro ao listar ordens de manutenção:", error);
       throw new AppError("Erro interno ao listar ordens de manutenção.", 500);
@@ -20,8 +25,24 @@ export const MaintenanceOrderService = {
     }
 
     try {
+      // Verifica se a máquina existe e está ativa
+      const machine = await MachineRepository.findById(data.machineId);
+      if (!machine) {
+        throw new AppError("Máquina não encontrada.", 404);
+      }
+      if (machine.status === "INACTIVE") {
+        throw new AppError("Não é possível criar ordem de serviço para uma máquina inativa.", 400);
+      }
+
       const order = new MaintenanceOrder(data);
-      return await MaintenanceOrderRepository.create(order);
+      const createdOrder = await MaintenanceOrderRepository.create(order);
+
+      // Se a ordem foi criada com status IN_PROGRESS, muda a máquina para MAINTENANCE
+      if (data.status === "IN_PROGRESS" && machine.status === "ACTIVE") {
+        await MachineRepository.update(data.machineId, { status: "MAINTENANCE" });
+      }
+
+      return createdOrder;
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao criar ordem de manutenção:", error);
@@ -30,7 +51,7 @@ export const MaintenanceOrderService = {
   },
 
   // 📍 Atualiza uma ordem de manutenção
-  async update(id, data) {
+  async update(id, data, user = null) {
     if (!id) {
       throw new AppError("ID da ordem de manutenção não informado.", 400);
     }
@@ -43,8 +64,83 @@ export const MaintenanceOrderService = {
       throw new AppError("Ordem de manutenção não encontrada.", 404);
     }
 
+    // Se for técnico, verifica se a ordem pertence a ele
+    const userRole = user ? String(user.role || '').toUpperCase().trim() : '';
+    if (userRole === "TECHNICIAN" && found.userId !== user.id) {
+      throw new AppError("Você não tem permissão para editar esta ordem de serviço.", 403);
+    }
+
     try {
-      return await MaintenanceOrderRepository.update(id, data);
+      const oldStatus = found.status;
+      const newStatus = data.status;
+      const machineId = found.machineId;
+      const isStatusChanged = newStatus && oldStatus !== newStatus;
+      const isTechnicianUpdating = userRole === "TECHNICIAN" && found.userId === user?.id;
+      const hasDifferentCreator = found.createdById && found.createdById !== found.userId;
+
+      // Apenas técnicos podem iniciar ou concluir ordens
+      if (newStatus && (newStatus === "IN_PROGRESS" || newStatus === "COMPLETED")) {
+        if (userRole !== "TECHNICIAN") {
+          throw new AppError("Apenas o técnico responsável pode iniciar ou concluir uma ordem de serviço.", 403);
+        }
+        if (found.userId !== user?.id) {
+          throw new AppError("Você não tem permissão para iniciar ou concluir esta ordem de serviço.", 403);
+        }
+      }
+
+      // Atualiza a ordem
+      const updatedOrder = await MaintenanceOrderRepository.update(id, data);
+
+      // Busca a máquina para atualizar seu status
+      const machine = await MachineRepository.findById(machineId);
+      if (!machine) {
+        console.warn(`⚠️ Máquina ${machineId} não encontrada ao atualizar ordem ${id}`);
+        return updatedOrder;
+      }
+
+      // Lógica de atualização do status da máquina baseado no status da ordem
+      if (newStatus === "IN_PROGRESS" && oldStatus !== "IN_PROGRESS") {
+        // Ordem iniciada: máquina vai para MAINTENANCE (se estava ACTIVE)
+        if (machine.status === "ACTIVE") {
+          await MachineRepository.update(machineId, { status: "MAINTENANCE" });
+        }
+      } else if ((newStatus === "COMPLETED" || newStatus === "CANCELLED") && oldStatus === "IN_PROGRESS") {
+        // Ordem concluída ou cancelada: máquina volta para ACTIVE (se estava em MAINTENANCE)
+        if (machine.status === "MAINTENANCE") {
+          await MachineRepository.update(machineId, { status: "ACTIVE" });
+        }
+      } else if (newStatus === "CANCELLED" && oldStatus !== "CANCELLED") {
+        // Ordem cancelada: máquina volta para ACTIVE (se estava em MAINTENANCE)
+        if (machine.status === "MAINTENANCE") {
+          await MachineRepository.update(machineId, { status: "ACTIVE" });
+        }
+      }
+
+      // Notifica o gerador da ordem quando o técnico modifica o status
+      if (isStatusChanged && isTechnicianUpdating && hasDifferentCreator && found.createdById) {
+        try {
+          const statusMessages = {
+            "IN_PROGRESS": "iniciou",
+            "PAUSED": "pausou",
+            "COMPLETED": "concluiu",
+            "CANCELLED": "cancelou"
+          };
+          
+          const action = statusMessages[newStatus] || "modificou";
+          const orderTitle = found.title || `Ordem #${id.substring(0, 8)}`;
+          
+          await NotificationService.create({
+            title: "Atualização de Ordem de Serviço",
+            message: `O técnico responsável ${action} a ordem de serviço "${orderTitle}"`,
+            userId: found.createdById
+          });
+        } catch (notifError) {
+          // Não falha a atualização se a notificação falhar
+          console.error("❌ Erro ao enviar notificação ao gerador da ordem:", notifError);
+        }
+      }
+
+      return updatedOrder;
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao atualizar ordem de manutenção:", error);
@@ -64,7 +160,20 @@ export const MaintenanceOrderService = {
     }
 
     try {
+      const machineId = found.machineId;
+      const orderStatus = found.status;
+
+      // Deleta a ordem
       await MaintenanceOrderRepository.delete(id);
+
+      // Se a ordem estava em andamento, volta a máquina para ACTIVE
+      if (orderStatus === "IN_PROGRESS") {
+        const machine = await MachineRepository.findById(machineId);
+        if (machine && machine.status === "MAINTENANCE") {
+          await MachineRepository.update(machineId, { status: "ACTIVE" });
+        }
+      }
+
       return { message: "Ordem de manutenção removida com sucesso." };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -74,7 +183,7 @@ export const MaintenanceOrderService = {
   },
 
   // 📍 Busca uma ordem de manutenção por ID
-  async findById(id) {
+  async findById(id, user = null) {
     if (!id) {
       throw new AppError("ID da ordem de manutenção não informado.", 400);
     }
@@ -84,6 +193,13 @@ export const MaintenanceOrderService = {
       if (!order) {
         throw new AppError("Ordem de manutenção não encontrada.", 404);
       }
+      
+      // Se for técnico, verifica se a ordem pertence a ele
+      const userRole = user ? String(user.role || '').toUpperCase().trim() : '';
+      if (userRole === "TECHNICIAN" && order.userId !== user.id) {
+        throw new AppError("Você não tem permissão para visualizar esta ordem de serviço.", 403);
+      }
+      
       return order;
     } catch (error) {
       if (error instanceof AppError) throw error;

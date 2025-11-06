@@ -5,6 +5,9 @@ export const RolePolicy = {
     "VIEW_ORDERS",
     "VIEW_PIECES",
     "CREATE_HISTORY",
+    "UPDATE_ORDER",
+    "CREATE_STOCK_EXIT",
+    // Removido VIEW_HISTORY - apenas supervisor e admin podem ver histórico
   ],
 
   SUPERVISOR: [
@@ -14,6 +17,21 @@ export const RolePolicy = {
     "VIEW_REPORTS",
     "VIEW_PIECES",
     "CREATE_SCHEDULE",
+    "VIEW_ORDERS",
+    "VIEW_NOTIFICATIONS",
+    "VIEW_HISTORY",
+    "CREATE_MACHINE",
+    "UPDATE_MACHINE",
+    "DELETE_MACHINE",
+    "CREATE_PIECE",
+    "UPDATE_PIECE",
+    "DELETE_PIECE",
+    "CREATE_STOCK_MOVEMENT",
+    "UPDATE_STOCK_MOVEMENT",
+    "DELETE_STOCK_MOVEMENT",
+    "MANAGE_SETTINGS",
+    "DELETE_ORDER",
+    // Não inclui permissões de usuários e logs (mantém apenas ADMIN)
   ],
 
   ADMIN: [

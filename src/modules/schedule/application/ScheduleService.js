@@ -30,7 +30,7 @@ export const ScheduleService = {
 
     try {
       const schedule = new Schedule(data);
-      const created = await ScheduleRepository.create(schedule.toJson());
+      const created = await ScheduleRepository.create(schedule.toJSON());
       return created;
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -40,7 +40,7 @@ export const ScheduleService = {
   },
 
   // 📍 Atualiza um agendamento
-  async update(id, data) {
+  async update(id, data, user = null) {
     if (!id) {
       throw new AppError("ID do agendamento não informado.", 400);
     }
@@ -54,7 +54,36 @@ export const ScheduleService = {
     }
 
     try {
-      return await ScheduleRepository.update(id, data);
+      const userRole = user ? String(user.role || '').toUpperCase().trim() : '';
+      const isTechnicianUpdating = userRole === "TECHNICIAN" && found.userId === user?.id;
+      const hasDifferentCreator = found.createdById && found.createdById !== found.userId;
+
+      const updatedSchedule = await ScheduleRepository.update(id, data);
+
+      // Notifica o gerador do agendamento quando o técnico modifica
+      if (isTechnicianUpdating && hasDifferentCreator && found.createdById) {
+        try {
+          const machineName = found.machine?.name || `Máquina #${found.machineId?.substring(0, 8)}`;
+          const scheduleDate = new Date(found.date).toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          
+          await NotificationService.create({
+            title: "Atualização de Agendamento",
+            message: `O técnico responsável modificou o agendamento da máquina "${machineName}" agendado para ${scheduleDate}`,
+            userId: found.createdById
+          });
+        } catch (notifError) {
+          // Não falha a atualização se a notificação falhar
+          console.error("❌ Erro ao enviar notificação ao gerador do agendamento:", notifError);
+        }
+      }
+
+      return updatedSchedule;
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao atualizar agendamento:", error);

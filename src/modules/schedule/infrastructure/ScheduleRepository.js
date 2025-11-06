@@ -5,6 +5,7 @@ export const ScheduleRepository={
         return await prisma.schedule.findMany({
             include:{
                 user:{select:{id:true,name:true,email:true}},
+                createdBy:{select:{id:true,name:true,email:true}},
                 machine:true,
             },
             orderBy: { date: "desc" },
@@ -15,6 +16,7 @@ export const ScheduleRepository={
             where:{id},
             include:{
                 user:{select:{id:true,name:true,email:true}},
+                createdBy:{select:{id:true,name:true,email:true}},
                 machine:true,
             }
         })

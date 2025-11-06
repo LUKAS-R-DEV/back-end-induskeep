@@ -16,6 +16,16 @@ export const UserService = {
     }
   },
 
+  // 📍 Lista apenas técnicos (para supervisor e admin atribuírem ordens)
+  async listTechnicians() {
+    try {
+      return await UserRepository.findTechnicians();
+    } catch (error) {
+      console.error("❌ Erro ao listar técnicos:", error);
+      throw new AppError("Erro interno ao listar técnicos.", 500);
+    }
+  },
+
   async findById(id) {
     try {
       if(!id) throw new AppError("ID do usuário nao informado.", 400);

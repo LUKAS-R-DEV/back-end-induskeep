@@ -6,8 +6,8 @@ export const getAll=async (req,res,next)=>{
     try{
         const { startDate, endDate } = req.query;
         const data = (startDate && endDate)
-          ? await StockService.findByPeriod(startDate, endDate)
-          : await StockService.list();
+          ? await StockService.findByPeriod(startDate, endDate, req.user)
+          : await StockService.list(req.user);
         res.status(200).json(data);
     }catch(err){
         next(err)
@@ -21,7 +21,7 @@ export const create = async (req, res, next) => {
             userId: req.user?.id
         };
         
-        const movement = await StockService.move(data);
+        const movement = await StockService.move(data, req.user);
         
         // Log após a movimentação
         await AuditLogService.log({

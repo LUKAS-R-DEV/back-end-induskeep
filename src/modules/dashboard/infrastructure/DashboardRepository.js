@@ -1,7 +1,10 @@
 import prisma from "../../../infrastructure/database/prismaClient.js";
 
 export const DashboardRepository = {
-    async getSumary(){
+    async getSumary(userId = null){
+        // Se userId for fornecido (técnico), filtra apenas ordens atribuídas a ele
+        const whereClause = userId ? { userId } : {};
+        
         const [
             totalMachines,
             totalOrders,
@@ -10,11 +13,11 @@ export const DashboardRepository = {
             totalPieces,
             settings,
         ] = await Promise.all([
-            prisma.machine.count(),
-            prisma.maintenanceOrder.count(),
-            prisma.maintenanceOrder.count({ where: { status: "PENDING" } }),
-            prisma.maintenanceOrder.count({ where: { status: "COMPLETED" } }),
-            prisma.piece.count(),
+            userId ? Promise.resolve(0) : prisma.machine.count(), // Técnico não precisa ver total de máquinas
+            prisma.maintenanceOrder.count({ where: whereClause }),
+            prisma.maintenanceOrder.count({ where: { ...whereClause, status: "PENDING" } }),
+            prisma.maintenanceOrder.count({ where: { ...whereClause, status: "COMPLETED" } }),
+            userId ? Promise.resolve(0) : prisma.piece.count(), // Técnico não precisa ver total de peças
             prisma.settings.findFirst(),
         ]);
 
@@ -24,6 +27,7 @@ export const DashboardRepository = {
             const threshold = new Date(Date.now() - durationMin * 60 * 1000);
             overdueOrders = await prisma.maintenanceOrder.count({
                 where: {
+                    ...whereClause,
                     status: { not: "COMPLETED" },
                     createdAt: { lte: threshold },
                 },
@@ -49,8 +53,10 @@ export const DashboardRepository = {
             select:{id:true,name:true,code:true,quantity:true}});
             
         },
-    async getRecentOrders(){
+    async getRecentOrders(userId = null){
+        const whereClause = userId ? { userId } : {};
         return await prisma.maintenanceOrder.findMany({
+            where: whereClause,
             take: 5,
             orderBy: { createdAt: "desc" },
             include: {

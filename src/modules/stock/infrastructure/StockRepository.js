@@ -36,8 +36,10 @@ export const StockRepository = {
     });
   },
 
-  async findAll() {
+  async findAll(userId = null) {
+    const where = userId ? { userId } : {};
     return await prisma.stockMovement.findMany({
+      where,
       include: {
         piece: true,
         user: { select: { id: true, name: true, email: true } }
@@ -57,19 +59,39 @@ export const StockRepository = {
     });
   },
 
-  async findByPeriod(startDate, endDate) {
-    return await prisma.stockMovement.findMany({
-      where: {
-        movedAt: {
-          gte: new Date(startDate),
-          lte: new Date(endDate),
-        },
+  async findByPeriod(startDate, endDate, userId = null) {
+    const where = {
+      movedAt: {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
       },
+    };
+    if (userId) {
+      where.userId = userId;
+    }
+    return await prisma.stockMovement.findMany({
+      where,
       include: {
         piece: true,
         user: { select: { id: true, name: true, email: true } },
       },
       orderBy: { movedAt: "desc" },
+    });
+  },
+
+  async findById(id) {
+    return await prisma.stockMovement.findUnique({
+      where: { id },
+      include: {
+        piece: true,
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
+  },
+
+  async delete(id) {
+    return await prisma.stockMovement.delete({
+      where: { id },
     });
   }
 };

@@ -2,14 +2,14 @@
 import { Router } from "express";
 import * as ReportController from "./ReportController.js";
 import { authMiddleware } from "../../../infrastructure/security/authMiddleware.js";
-import { requireAdmin } from "../../../infrastructure/security/requireAdmin.js";
+import { requireSupervisorOrAdmin } from "../../../infrastructure/security/requireSupervisorOrAdmin.js";
 const router = Router();
 router.use(authMiddleware);
 
 
 
-router.get("/overview",requireAdmin,ReportController.getOverview);
-router.get("/history",requireAdmin,ReportController.getHistory);
-router.get("/export",requireAdmin,ReportController.exportReport);
+router.get("/overview",requireSupervisorOrAdmin,ReportController.getOverview);
+router.get("/history",requireSupervisorOrAdmin,ReportController.getHistory);
+router.get("/export",requireSupervisorOrAdmin,ReportController.exportReport);
 
 export default router;

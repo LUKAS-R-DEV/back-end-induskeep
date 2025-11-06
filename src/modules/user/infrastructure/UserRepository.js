@@ -16,6 +16,12 @@ async findById(id){
 async findAll(){
     return prisma.user.findMany({select:{id:true,name:true,email:true,role:true,isActive:true,deactivatedAt:true,deactivationReason:true}});
 },
+async findTechnicians(){
+    return prisma.user.findMany({
+        where: { role: "TECHNICIAN", isActive: true },
+        select: { id: true, name: true, email: true, role: true }
+    });
+},
 async create(data){
     return prisma.user.create({
   data: typeof data.toJSON === "function" ? data.toJSON() : { ...data },

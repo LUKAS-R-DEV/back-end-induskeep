@@ -13,11 +13,6 @@ import env from "./infrastructure/config/env.js";
 import router from "./interface/routes/index.js";
 import { errorHandler } from "./interface/middlewares/errorHandler.js";
 import { auditMiddleware } from "./interface/middlewares/auditMiddleware.js";
-import {
-  sendScheduleReminders,
-  notifyOverdueOrders,
-  sendDailyDigest,
-} from "./jobs/notificationJobs.js";
 
 const app = express();
 const __filename = fileURLToPath(import.meta.url);
@@ -54,7 +49,6 @@ app.use(
   })
 );
 
-// ✅ Express 5 exige regex para o pré-flight
 app.options(/.*/, cors());
 
 // ================== MIDDLEWARES ==================

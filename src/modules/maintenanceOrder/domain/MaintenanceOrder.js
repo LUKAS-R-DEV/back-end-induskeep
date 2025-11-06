@@ -1,5 +1,5 @@
 export class MaintenanceOrder {
-  constructor({ title, description = null, status = "PENDING", userId, machineId }) {
+  constructor({ title, description = null, status = "PENDING", userId, machineId, createdById }) {
     if (!title || !userId || !machineId) {
       throw new Error("Campos obrigatórios: title, userId e machineId");
     }
@@ -9,6 +9,8 @@ export class MaintenanceOrder {
     this.status = status;
     this.userId = userId;
     this.machineId = machineId;
+    // Se createdById não for fornecido, assume que é o mesmo que userId (compatibilidade)
+    this.createdById = createdById || userId;
   }
 
   toJSON() {
@@ -18,6 +20,7 @@ export class MaintenanceOrder {
       status: this.status,
       userId: this.userId,
       machineId: this.machineId,
+      createdById: this.createdById,
     };
   }
 }

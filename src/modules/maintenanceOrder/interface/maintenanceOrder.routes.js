@@ -17,7 +17,7 @@ router.post("/", requirePermission("CREATE_ORDER"), MaintenanceOrderController.c
 // Atualizar ordem - apenas SUPERVISOR e ADMIN (que têm UPDATE_ORDER)
 router.put("/:id", requirePermission("UPDATE_ORDER"), MaintenanceOrderController.update);
 
-// Deletar ordem - apenas ADMIN (por enquanto, pode ser ajustado depois)
-router.delete("/:id", requirePermission("ALL"), MaintenanceOrderController.remove);
+// Deletar ordem - Supervisor e Admin
+router.delete("/:id", requirePermission("DELETE_ORDER"), MaintenanceOrderController.remove);
 
 export default router;

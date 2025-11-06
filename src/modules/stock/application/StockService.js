@@ -5,9 +5,11 @@ import { AppError } from "../../../shared/errors/AppError.js";
 
 export const StockService = {
   // 📍 Lista todas as movimentações de estoque
-  async list() {
+  async list(user = null) {
     try {
-      return await StockRepository.findAll();
+      // Se for técnico, filtra apenas movimentações dele
+      const userId = user && String(user.role || '').toUpperCase().trim() === "TECHNICIAN" ? user.id : null;
+      return await StockRepository.findAll(userId);
     } catch (error) {
       console.error("❌ Erro ao listar movimentações de estoque:", error);
       throw new AppError("Erro interno ao listar movimentações de estoque.", 500);
@@ -15,7 +17,7 @@ export const StockService = {
   },
 
   // 📍 Registra uma movimentação de estoque
-  async move(data) {
+  async move(data, user = null) {
     if (!data.pieceId || !data.quantity || !data.type) {
       throw new AppError("Campos obrigatórios ausentes: pieceId, quantity e type.", 400);
     }
@@ -26,6 +28,12 @@ export const StockService = {
 
     if (!['ENTRY', 'EXIT', 'ADJUSTMENT'].includes(data.type)) {
       throw new AppError("Tipo de movimentação inválido. Use: ENTRY, EXIT ou ADJUSTMENT.", 400);
+    }
+
+    // Se for técnico, permite apenas saída (EXIT)
+    const userRole = user ? String(user.role || '').toUpperCase().trim() : '';
+    if (userRole === "TECHNICIAN" && data.type !== "EXIT") {
+      throw new AppError("Técnicos podem realizar apenas saídas de estoque (EXIT).", 403);
     }
 
     try {
@@ -54,13 +62,15 @@ export const StockService = {
   },
 
   // 📍 Busca movimentações por período
-  async findByPeriod(startDate, endDate) {
+  async findByPeriod(startDate, endDate, user = null) {
     if (!startDate || !endDate) {
       throw new AppError("Data inicial e final são obrigatórias.", 400);
     }
 
     try {
-      return await StockRepository.findByPeriod(startDate, endDate);
+      // Se for técnico, filtra apenas movimentações dele
+      const userId = user && String(user.role || '').toUpperCase().trim() === "TECHNICIAN" ? user.id : null;
+      return await StockRepository.findByPeriod(startDate, endDate, userId);
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao buscar movimentações por período:", error);

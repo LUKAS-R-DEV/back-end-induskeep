@@ -11,13 +11,19 @@ export const getAll = async (req, res, next) => {
 
 export const create = async (req, res, next) => {
     try {
+        const userRole = req.user?.role ? String(req.user.role).toUpperCase().trim() : '';
+        const isSupervisorOrAdmin = userRole === "SUPERVISOR" || userRole === "ADMIN";
+        
+        // Se for supervisor/admin, separa createdById (gerador) de userId (técnico responsável)
+        // Se for técnico, usa o mesmo ID para ambos (compatibilidade)
         const data = {
             ...req.body,
-            userId: req.user?.id, 
+            userId: isSupervisorOrAdmin && req.body.userId ? req.body.userId : req.user?.id,
+            createdById: req.user?.id, // Sempre salva quem criou o agendamento
         };
     
-    const schedule = await ScheduleService.create(data);
-    res.status(201).json(schedule);
+        const schedule = await ScheduleService.create(data);
+        res.status(201).json(schedule);
     } catch (err) {
         next(err);
     }
@@ -25,7 +31,7 @@ export const create = async (req, res, next) => {
 export const update = async (req, res, next) => {
         try {
           const id = req.params.id.replace(/['"]+/g, "");
-          const schedule = await ScheduleService.update(id, req.body);
+          const schedule = await ScheduleService.update(id, req.body, req.user);
           res.status(200).json(schedule);
         } catch (err) {
           next(err);
