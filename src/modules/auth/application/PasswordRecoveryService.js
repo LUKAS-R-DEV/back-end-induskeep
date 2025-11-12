@@ -133,7 +133,7 @@ export const PasswordRecoveryService = {
             Para sua segurança, recomendamos que você use uma senha forte e única.
           </p>
         `,
-        icon: "fa-check-circle"
+        icon: "fa-circle-check"
       });
 
       await EmailAdapter.sendEmail({
