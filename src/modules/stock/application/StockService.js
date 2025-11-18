@@ -22,6 +22,11 @@ export const StockService = {
       throw new AppError("Campos obrigatórios ausentes: pieceId, quantity e type.", 400);
     }
 
+    // Observação é obrigatória
+    if (!data.notes || !data.notes.trim()) {
+      throw new AppError("Observação é obrigatória. Informe o motivo da movimentação.", 400);
+    }
+
     if (data.quantity <0||data.quantity===0) {
       throw new AppError("Quantidade deve ser maior que zero.", 400);
     }
