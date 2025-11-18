@@ -2,8 +2,15 @@ import prisma from "../../../infrastructure/database/prismaClient.js";
 
 export const HistoryRepository={
 
-    async findAll(){
+    async findAll(userId = null){
+        const where = userId ? {
+            order: {
+                userId: userId
+            }
+        } : {};
+        
         return await prisma.history.findMany({
+            where,
             include:{
                 order:{
                     include:{

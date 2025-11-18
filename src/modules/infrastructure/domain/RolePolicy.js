@@ -5,9 +5,9 @@ export const RolePolicy = {
     "VIEW_ORDERS",
     "VIEW_PIECES",
     "CREATE_HISTORY",
+    "VIEW_HISTORY", // Técnicos podem ver apenas suas próprias ordens concluídas
     "UPDATE_ORDER",
     "CREATE_STOCK_EXIT",
-    // Removido VIEW_HISTORY - apenas supervisor e admin podem ver histórico
   ],
 
   SUPERVISOR: [

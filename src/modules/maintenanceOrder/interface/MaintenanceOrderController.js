@@ -1,6 +1,7 @@
 import { MaintenanceOrderService } from "../application/MaintenanceOrderService.js";
 import { AuditLogService } from "../../audit/application/AuditLogService.js";
 import { sanitize } from "../../../shared/sanitize.js";
+import { ScheduleRepository } from "../../schedule/infrastructure/ScheduleRepository.js";
 
 export const getAll = async (req, res, next) => {
   try {
@@ -15,6 +16,24 @@ export const create = async (req, res, next) => {
   try {
     const userRole = req.user?.role ? String(req.user.role).toUpperCase().trim() : '';
     const isSupervisorOrAdmin = userRole === "SUPERVISOR" || userRole === "ADMIN";
+    const isAdmin = userRole === "ADMIN";
+    
+    // Se a ordem está sendo criada a partir de um agendamento, valida permissão
+    if (req.body.scheduleId) {
+      const schedule = await ScheduleRepository.findById(req.body.scheduleId);
+      
+      if (!schedule) {
+        return res.status(404).json({ error: "Agendamento não encontrado." });
+      }
+      
+      // Apenas o criador do agendamento ou admin pode iniciar a manutenção
+      const creatorId = schedule.createdById || schedule.createdBy?.id;
+      if (!isAdmin && creatorId !== req.user?.id) {
+        return res.status(403).json({ 
+          error: "Acesso negado. Apenas o criador do agendamento ou um administrador pode iniciar a manutenção." 
+        });
+      }
+    }
     
     // Se for supervisor/admin e tiver userId no body, usa o userId do body (técnico responsável)
     // Se não tiver userId no body, usa o próprio usuário (quando técnico cria para si mesmo)

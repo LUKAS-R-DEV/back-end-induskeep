@@ -34,13 +34,15 @@ export const MaintenanceOrderService = {
         throw new AppError("Não é possível criar ordem de serviço para uma máquina inativa.", 400);
       }
 
-      const order = new MaintenanceOrder(data);
+      // Sempre cria como PENDING - faz mais sentido uma ordem recém-criada estar pendente
+      // O técnico pode iniciar a ordem depois através da interface
+      const orderData = {
+        ...data,
+        status: "PENDING"
+      };
+      
+      const order = new MaintenanceOrder(orderData);
       const createdOrder = await MaintenanceOrderRepository.create(order);
-
-      // Se a ordem foi criada com status IN_PROGRESS, muda a máquina para MAINTENANCE
-      if (data.status === "IN_PROGRESS" && machine.status === "ACTIVE") {
-        await MachineRepository.update(data.machineId, { status: "MAINTENANCE" });
-      }
 
       return createdOrder;
     } catch (error) {
