@@ -47,12 +47,15 @@ export const DashboardRepository = {
         }
     },
     async getLowStockPieces(){
-        const settings=await prisma.settings.findFirst();
-        const minStock=settings?.minStockThreshold?? 5;
-        return prisma.piece.findMany({where:{quantity:{lt:minStock}},
-            select:{id:true,name:true,code:true,quantity:true}});
-            
-        },
+        // Estoque crítico: apenas peças com quantidade <= 0 (sem estoque)
+        // Isso alinha com a lógica da página de estoque onde:
+        // - crítico = quantity <= 0
+        // - baixo = quantity <= minStock (mas > 0)
+        return prisma.piece.findMany({
+            where: { quantity: { lte: 0 } },
+            select: { id: true, name: true, code: true, quantity: true }
+        });
+    },
     async getRecentOrders(userId = null){
         const whereClause = userId ? { userId } : {};
         return await prisma.maintenanceOrder.findMany({
