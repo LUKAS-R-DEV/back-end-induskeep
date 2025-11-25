@@ -25,7 +25,32 @@ export const OrderItemRepository={
         return await prisma.orderItem.create({data})
     },
 
+    async update(id, data){
+        return await prisma.orderItem.update({
+            where: { id },
+            data
+        })
+    },
+
     async delete(id){
         return await prisma.orderItem.delete({where:{id}})
+    },
+
+    async findByOrder(orderId){
+        return await prisma.orderItem.findMany({
+            where: { orderId },
+            include: {
+                piece: {
+                    select: {
+                        id: true,
+                        name: true,
+                        code: true,
+                        quantity: true,
+                        unitPrice: true
+                    }
+                }
+            },
+            orderBy: { usedAt: 'desc' }
+        })
     }
 }

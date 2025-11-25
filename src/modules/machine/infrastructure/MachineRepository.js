@@ -1,11 +1,20 @@
 import prisma from "../../../infrastructure/database/prismaClient.js";
 
 export const MachineRepository={
-    async findAll(){
+    async findAll(includeOrders = false){
+        const include = {
+            user: { select: { id: true, name: true, email: true } },
+        };
+        
+        if (includeOrders) {
+            include.orders = {
+                select: { id: true, status: true, createdAt: true }
+            };
+        }
+        
         return prisma.machine.findMany({
-            include:{
-               user: { select: { id: true, name: true, email: true } },  
-            },
+            include,
+            orderBy: { name: "asc" },
         });
         
 },

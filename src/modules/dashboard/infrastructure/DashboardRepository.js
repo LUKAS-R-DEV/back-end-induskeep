@@ -21,6 +21,16 @@ export const DashboardRepository = {
             prisma.settings.findFirst(),
         ]);
 
+        // Contar agendamentos atrasados (data passou e ainda não foram executados)
+        const now = new Date();
+        const overdueSchedulesWhere = userId 
+            ? { userId, date: { lt: now } }
+            : { date: { lt: now } };
+        
+        const overdueSchedules = await prisma.schedule.count({
+            where: overdueSchedulesWhere,
+        });
+
         let overdueOrders = 0;
         const durationMin = settings?.defaultRepairDuration || 0;
         if (durationMin > 0) {
@@ -43,6 +53,7 @@ export const DashboardRepository = {
             completedOrders,
             totalPieces,
             overdueOrders,
+            overdueSchedules,
             completionRate,
         }
     },

@@ -34,8 +34,11 @@ export const OrderItemService = {
         throw new AppError("Quantidade insuficiente em estoque.", 400);
       }
       
+      // NOTA: A atualização da quantidade da peça é feita pelo StockService.move
+      // quando uma movimentação de estoque é criada. Não atualizamos aqui para
+      // evitar duplicação e manter o histórico completo de movimentações.
+      
       const item = new OrderItem(data);
-      await PieceRepository.update(piece.id, { quantity: piece.quantity - data.quantity });
       return await OrderItemRepository.create(item);
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -103,10 +106,13 @@ export const OrderItemService = {
     }
 
     try {
-      return await OrderItemRepository.findByOrder(orderId);
+      const items = await OrderItemRepository.findByOrder(orderId);
+      // Retorna array vazio se não houver itens (não é erro)
+      return Array.isArray(items) ? items : [];
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao buscar itens por ordem:", error);
+      console.error("❌ Detalhes do erro:", { orderId, error: error.message });
       throw new AppError("Erro interno ao buscar itens por ordem.", 500);
     }
   },

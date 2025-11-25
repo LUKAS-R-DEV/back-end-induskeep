@@ -5,6 +5,7 @@ import { authMiddleware } from "../../../infrastructure/security/authMiddleware.
 const router=Router();
 router.use(authMiddleware);
 router.get("/",OrderItemController.getAll);
+router.get("/order/:orderId",OrderItemController.getByOrder);
 router.post("/",OrderItemController.create);
 router.delete("/:id",OrderItemController.remove);
 export default router

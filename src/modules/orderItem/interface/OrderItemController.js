@@ -26,4 +26,18 @@ export const remove=async(req,res,next)=>{
         }catch(err){
             next(err)
     }
-}
+};
+
+export const getByOrder=async(req,res,next)=>{
+    try{
+        // A rota é /order/:orderId, então o parâmetro é orderId
+        const orderId = req.params.orderId ? req.params.orderId.replace(/['"]+/g, "") : null;
+        if (!orderId) {
+            return res.status(400).json({ error: "ID da ordem não fornecido." });
+        }
+        const data=await OrderItemService.findByOrder(orderId);
+        res.status(200).json(data);
+    }catch(err){
+        next(err)
+    }
+};

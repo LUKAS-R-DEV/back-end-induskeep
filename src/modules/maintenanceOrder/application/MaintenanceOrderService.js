@@ -79,14 +79,25 @@ export const MaintenanceOrderService = {
       const isStatusChanged = newStatus && oldStatus !== newStatus;
       const isTechnicianUpdating = userRole === "TECHNICIAN" && found.userId === user?.id;
       const hasDifferentCreator = found.createdById && found.createdById !== found.userId;
+      const isSupervisorOrAdmin = userRole === "SUPERVISOR" || userRole === "ADMIN";
 
-      // Apenas técnicos podem iniciar ou concluir ordens
-      if (newStatus && (newStatus === "IN_PROGRESS" || newStatus === "COMPLETED")) {
+      // Supervisores e Admins só podem cancelar ordens, não podem mudar para outros status
+      if (isStatusChanged && isSupervisorOrAdmin && newStatus !== "CANCELLED") {
+        throw new AppError("Supervisores e administradores só podem cancelar ordens de serviço. Apenas técnicos podem alterar o status da ordem.", 403);
+      }
+
+      // Apenas técnicos podem iniciar ordens
+      // CONCLUSÃO DEVE SER FEITA APENAS ATRAVÉS DO HISTORY (que exige peças)
+      if (newStatus === "COMPLETED") {
+        throw new AppError("Para concluir uma ordem, use o endpoint de histórico que exige informar as peças utilizadas.", 400);
+      }
+      
+      if (newStatus === "IN_PROGRESS") {
         if (userRole !== "TECHNICIAN") {
-          throw new AppError("Apenas o técnico responsável pode iniciar ou concluir uma ordem de serviço.", 403);
+          throw new AppError("Apenas o técnico responsável pode iniciar uma ordem de serviço.", 403);
         }
         if (found.userId !== user?.id) {
-          throw new AppError("Você não tem permissão para iniciar ou concluir esta ordem de serviço.", 403);
+          throw new AppError("Você não tem permissão para iniciar esta ordem de serviço.", 403);
         }
       }
 
@@ -106,8 +117,8 @@ export const MaintenanceOrderService = {
         if (machine.status === "ACTIVE") {
           await MachineRepository.update(machineId, { status: "MAINTENANCE" });
         }
-      } else if ((newStatus === "COMPLETED" || newStatus === "CANCELLED") && oldStatus === "IN_PROGRESS") {
-        // Ordem concluída ou cancelada: máquina volta para ACTIVE (se estava em MAINTENANCE)
+      } else if (newStatus === "CANCELLED" && oldStatus === "IN_PROGRESS") {
+        // Ordem cancelada: máquina volta para ACTIVE (se estava em MAINTENANCE)
         if (machine.status === "MAINTENANCE") {
           await MachineRepository.update(machineId, { status: "ACTIVE" });
         }
@@ -197,16 +208,47 @@ export const MaintenanceOrderService = {
       }
       
       // Se for técnico, verifica se a ordem pertence a ele
-      const userRole = user ? String(user.role || '').toUpperCase().trim() : '';
-      if (userRole === "TECHNICIAN" && order.userId !== user.id) {
-        throw new AppError("Você não tem permissão para visualizar esta ordem de serviço.", 403);
+      if (user && user.id && user.role) {
+        const userRole = String(user.role || '').toUpperCase().trim();
+        const userId = String(user.id || '').trim();
+        
+        if (userRole === "TECHNICIAN") {
+          const orderUserId = order.userId ? String(order.userId).trim() : '';
+          
+          if (!orderUserId) {
+            console.warn("⚠️ Ordem sem userId atribuído:", { orderId: id, order });
+          }
+          
+          if (orderUserId && orderUserId !== userId) {
+            throw new AppError("Você não tem permissão para visualizar esta ordem de serviço.", 403);
+          }
+        }
+      }
+      
+      // Garante que os relacionamentos existam (pode ser null em ordens antigas)
+      if (!order.machine) {
+        order.machine = null;
+      }
+      if (!order.user) {
+        order.user = null;
+      }
+      if (!order.createdBy) {
+        order.createdBy = null;
       }
       
       return order;
     } catch (error) {
       if (error instanceof AppError) throw error;
       console.error("❌ Erro ao buscar ordem de manutenção:", error);
-      throw new AppError("Erro interno ao buscar ordem de manutenção.", 500);
+      console.error("❌ Stack trace:", error.stack);
+      console.error("❌ Detalhes do erro:", { 
+        id, 
+        userId: user?.id, 
+        userRole: user?.role,
+        errorMessage: error.message,
+        errorName: error.name
+      });
+      throw new AppError(`Erro interno ao buscar ordem de manutenção: ${error.message}`, 500);
     }
   },
 };

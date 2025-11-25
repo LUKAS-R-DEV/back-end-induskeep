@@ -108,10 +108,49 @@ export const remove = async (req, res, next) => {
 };
 export const getById = async (req, res, next) => {
   try {
-    const id = req.params.id.replace(/['"]+/g, "");
+    const rawId = req.params.id;
+    const id = rawId ? String(rawId).replace(/['"]+/g, "").trim() : "";
+    
+    console.log("🔍 [getById] Iniciando busca:", { 
+      rawId, 
+      cleanedId: id, 
+      userId: req.user?.id, 
+      userRole: req.user?.role,
+      hasUser: !!req.user
+    });
+    
+    if (!id || id.length === 0) {
+      console.error("❌ [getById] ID vazio ou inválido");
+      return res.status(400).json({ error: "ID da ordem não fornecido." });
+    }
+    
+    // Valida formato UUID básico (36 caracteres com hífens)
+    if (id.length < 30) {
+      console.error("❌ [getById] ID muito curto, formato inválido:", id);
+      return res.status(400).json({ error: "Formato de ID inválido." });
+    }
+    
     const order = await MaintenanceOrderService.findById(id, req.user);
+    
+    if (!order) {
+      console.warn("⚠️ [getById] Ordem não encontrada:", id);
+      return res.status(404).json({ error: "Ordem de manutenção não encontrada." });
+    }
+    
+    console.log("✅ [getById] Ordem encontrada:", { 
+      orderId: order.id, 
+      orderStatus: order.status,
+      orderUserId: order.userId 
+    });
+    
     res.status(200).json(order);
   } catch (err) {
+    console.error("❌ [getById] Erro no controller:", {
+      message: err.message,
+      status: err.status || err.statusCode,
+      name: err.name,
+      stack: err.stack
+    });
     next(err);
   }
 };
