@@ -22,6 +22,12 @@ NODE_ENV="development"
 
 # URL do Frontend (para CORS)
 FRONTEND_URL="http://localhost:5173"
+
+# VAPID Keys para Web Push Notifications (opcional)
+# Gere as keys com: npx web-push generate-vapid-keys
+VAPID_PUBLIC_KEY=""
+VAPID_PRIVATE_KEY=""
+VAPID_SUBJECT="mailto:admin@induskeep.com"
 ```
 
 ## Gerando um JWT_SECRET Seguro
@@ -49,7 +55,34 @@ python3 -c "import secrets; print(secrets.token_hex(64))"
 # Configurações de Email (se necessário)
 # EMAIL_SERVICE_API_KEY=""
 # EMAIL_FROM=""
+
+# VAPID Keys para Web Push Notifications
+# Gere as keys com: npx web-push generate-vapid-keys
+# VAPID_PUBLIC_KEY="sua_chave_publica_aqui"
+# VAPID_PRIVATE_KEY="sua_chave_privada_aqui"
+# VAPID_SUBJECT="mailto:seu-email@exemplo.com"
 ```
+
+## Configurando VAPID Keys para Web Push
+
+Para habilitar notificações push no navegador, você precisa gerar e configurar as VAPID keys:
+
+1. **Gere as keys:**
+   ```bash
+   cd backend
+   npx web-push generate-vapid-keys
+   ```
+
+2. **Adicione ao arquivo `.env`:**
+   ```env
+   VAPID_PUBLIC_KEY="sua_chave_publica_gerada"
+   VAPID_PRIVATE_KEY="sua_chave_privada_gerada"
+   VAPID_SUBJECT="mailto:seu-email@exemplo.com"
+   ```
+
+3. **Reinicie o servidor backend**
+
+**Nota:** As VAPID keys são opcionais. Se não configuradas, o sistema funcionará normalmente, mas as notificações push não estarão disponíveis.
 
 ## Segurança
 

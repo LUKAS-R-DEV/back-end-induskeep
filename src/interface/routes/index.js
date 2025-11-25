@@ -16,6 +16,7 @@ import exportRoutes from "../../modules/export/interface/export.routes.js";
 import emailRoutes from "../../modules/email/interface/email.routes.js";
 import settingsRoutes from "../../modules/settings/interface/settings.routes.js";
 import dashboardRoutes from "../../modules/dashboard/interface/dashboard.routes.js";
+import pushSubscriptionRoutes from "../../modules/pushSubscription/interface/pushSubscription.routes.js";
 
 const router=Router();
 
@@ -41,6 +42,7 @@ router.use("/export",exportRoutes);
 router.use("/email",emailRoutes);
 router.use("/settings",settingsRoutes);
 router.use("/dashboard",dashboardRoutes);
+router.use("/push-subscriptions",pushSubscriptionRoutes);
 
 export default router;
 

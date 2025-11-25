@@ -22,18 +22,32 @@ export const StockRepository = {
 
     if (newQuantity < 0) throw new AppError("Quantidade insuficiente.", 400);
 
+    // Atualiza a quantidade da peça
     await prisma.piece.update({
       where: { id: dto.pieceId },
       data: { quantity: newQuantity },
     });
 
-    return await prisma.stockMovement.create({
+    // Cria a movimentação e busca a peça atualizada
+    const movement = await prisma.stockMovement.create({
       data: dto,
       include: {
         piece: true,
         user: { select: { id: true, name: true, email: true } },
       }
     });
+
+    // Garante que a peça retornada tem a quantidade atualizada
+    // Busca novamente para evitar problemas de cache
+    const updatedPiece = await prisma.piece.findUnique({
+      where: { id: dto.pieceId }
+    });
+
+    if (updatedPiece) {
+      movement.piece = updatedPiece;
+    }
+
+    return movement;
   },
 
   async findAll(userId = null) {

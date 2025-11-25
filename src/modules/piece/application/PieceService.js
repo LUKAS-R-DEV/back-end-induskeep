@@ -3,6 +3,7 @@ import { Piece } from "../domain/Piece.js";
 import { AppError } from "../../../shared/errors/AppError.js";
 import { SettingsService } from "../../settings/application/SettingsService.js";
 import { NotificationService } from "../../notification/application/NotificationService.js";
+import { UserRepository } from "../../user/infrastructure/UserRepository.js";
 
 
 export const PieceService = {
@@ -35,14 +36,54 @@ export const PieceService = {
   console.log("⚙️ Estoque mínimo:", settings.minStockThreshold);
 
   if (piece.quantity < settings.minStockThreshold) {
-    console.log("⚠️ Estoque baixo detectado — criando notificação (deduplicada)...");
-    await NotificationService.createIfNotExists({
-      title: "Estoque baixo detectado",
-      message: `Peça "${piece.name}" (${piece.code}) abaixo do mínimo (${settings.minStockThreshold}).`,
-      userId: null,
-      windowMinutes: 1440,
-    });
-    console.log("✅ Notificação processada!");
+    console.log("⚠️ Estoque baixo detectado — notificando admins e supervisores...");
+    console.log(`📊 Comparação: ${piece.quantity} < ${settings.minStockThreshold} = ${piece.quantity < settings.minStockThreshold}`);
+    
+    // Notifica todos os administradores e supervisores ativos
+    try {
+      const allUsers = await UserRepository.findAll();
+      console.log(`👥 Total de usuários encontrados: ${allUsers.length}`);
+      
+      const adminsAndSupervisors = allUsers.filter(u => 
+        (u.role === "ADMIN" || u.role === "SUPERVISOR") && 
+        u.isActive === true
+      );
+      
+      console.log(`👥 Admins/Supervisores ativos encontrados: ${adminsAndSupervisors.length}`);
+      if (adminsAndSupervisors.length === 0) {
+        console.warn("⚠️ Nenhum admin ou supervisor ativo encontrado para notificar!");
+      }
+
+      const title = "Estoque baixo detectado";
+      const message = `Peça "${piece.name}" (${piece.code}) abaixo do mínimo (${settings.minStockThreshold}).`;
+
+      // Envia notificação para cada admin/supervisor
+      let notificationsSent = 0;
+      for (const user of adminsAndSupervisors) {
+        try {
+          const result = await NotificationService.createIfNotExists({
+            title,
+            message,
+            userId: user.id,
+            windowMinutes: 1440,
+          });
+          if (result?.id) {
+            notificationsSent++;
+            console.log(`✅ Notificação criada/enviada para ${user.role} ${user.name} (${user.id})`);
+          } else {
+            console.log(`⏭️ Notificação duplicada ignorada para ${user.role} ${user.name}`);
+          }
+        } catch (notifError) {
+          console.error(`❌ Erro ao enviar notificação para ${user.role} ${user.id}:`, notifError);
+        }
+      }
+      console.log(`✅ Total de ${notificationsSent} notificação(ões) enviada(s) para ${adminsAndSupervisors.length} usuário(s)!`);
+    } catch (notifError) {
+      // Não falha a criação da peça se a notificação falhar
+      console.error("❌ Erro ao buscar usuários para notificação:", notifError);
+    }
+  } else {
+    console.log(`✅ Estoque OK: ${piece.quantity} >= ${settings.minStockThreshold}`);
   }
 
   return await PieceRepository.create(piece);
@@ -70,14 +111,54 @@ async update(id, data) {
     console.log("⚙️ Estoque mínimo:", settings.minStockThreshold);
 
     if (updated.quantity < settings.minStockThreshold) {
-      console.log("⚠️ Estoque baixo detectado após atualização — criando notificação (deduplicada)...");
-      await NotificationService.createIfNotExists({
-        title: "Estoque baixo após atualização",
-        message: `Peça "${updated.name}" (${updated.code}) abaixo do mínimo (${settings.minStockThreshold}).`,
-        userId: null,
-        windowMinutes: 1440,
-      });
-      console.log("✅ Notificação processada após update!");
+      console.log("⚠️ Estoque baixo detectado após atualização — notificando admins e supervisores...");
+      console.log(`📊 Comparação: ${updated.quantity} < ${settings.minStockThreshold} = ${updated.quantity < settings.minStockThreshold}`);
+      
+      // Notifica todos os administradores e supervisores ativos
+      try {
+        const allUsers = await UserRepository.findAll();
+        console.log(`👥 Total de usuários encontrados: ${allUsers.length}`);
+        
+        const adminsAndSupervisors = allUsers.filter(u => 
+          (u.role === "ADMIN" || u.role === "SUPERVISOR") && 
+          u.isActive === true
+        );
+        
+        console.log(`👥 Admins/Supervisores ativos encontrados: ${adminsAndSupervisors.length}`);
+        if (adminsAndSupervisors.length === 0) {
+          console.warn("⚠️ Nenhum admin ou supervisor ativo encontrado para notificar!");
+        }
+
+        const title = "Estoque baixo após atualização";
+        const message = `Peça "${updated.name}" (${updated.code}) abaixo do mínimo (${settings.minStockThreshold}).`;
+
+        // Envia notificação para cada admin/supervisor
+        let notificationsSent = 0;
+        for (const user of adminsAndSupervisors) {
+          try {
+            const result = await NotificationService.createIfNotExists({
+              title,
+              message,
+              userId: user.id,
+              windowMinutes: 1440,
+            });
+            if (result?.id) {
+              notificationsSent++;
+              console.log(`✅ Notificação criada/enviada para ${user.role} ${user.name} (${user.id})`);
+            } else {
+              console.log(`⏭️ Notificação duplicada ignorada para ${user.role} ${user.name}`);
+            }
+          } catch (notifError) {
+            console.error(`❌ Erro ao enviar notificação para ${user.role} ${user.id}:`, notifError);
+          }
+        }
+        console.log(`✅ Total de ${notificationsSent} notificação(ões) enviada(s) para ${adminsAndSupervisors.length} usuário(s) após update!`);
+      } catch (notifError) {
+        // Não falha a atualização da peça se a notificação falhar
+        console.error("❌ Erro ao buscar usuários para notificação:", notifError);
+      }
+    } else {
+      console.log(`✅ Estoque OK após update: ${updated.quantity} >= ${settings.minStockThreshold}`);
     }
 
     return updated;

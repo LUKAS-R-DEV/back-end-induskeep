@@ -1,6 +1,7 @@
 import { NotificationRepository } from "../infrastructure/NotificationRepository.js";
 import { Notification } from "../domain/Notification.js";
 import { AppError } from "../../../shared/errors/AppError.js";
+import { PushSubscriptionService } from "../../pushSubscription/application/PushSubscriptionService.js";
 
 export const NotificationService = {
   // 📍 Lista todas as notificações
@@ -60,7 +61,28 @@ export const NotificationService = {
 
   try {
     const notification = new Notification(notificationData);
-    return await NotificationRepository.create(notification.toJSON());
+    const savedNotification = await NotificationRepository.create(notification.toJSON());
+
+    // Envia push notification se houver userId
+    if (data.userId) {
+      try {
+        await PushSubscriptionService.sendNotificationToUser(data.userId, {
+          title: notificationData.title,
+          body: notificationData.message,
+          icon: "/favicon.svg",
+          badge: "/favicon.svg",
+          data: {
+            notificationId: savedNotification.id,
+            url: "/notificacoes",
+          },
+        });
+      } catch (pushError) {
+        // Não falha a criação da notificação se o push falhar
+        console.error("⚠️ Erro ao enviar push notification:", pushError);
+      }
+    }
+
+    return savedNotification;
   } catch (error) {
     if (error instanceof AppError) throw error;
     console.error("❌ Erro ao criar notificação:", error);

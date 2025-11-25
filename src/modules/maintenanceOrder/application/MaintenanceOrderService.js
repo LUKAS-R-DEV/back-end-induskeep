@@ -44,6 +44,23 @@ export const MaintenanceOrderService = {
       const order = new MaintenanceOrder(orderData);
       const createdOrder = await MaintenanceOrderRepository.create(order);
 
+      // Notifica o técnico atribuído se for diferente de quem criou
+      if (createdOrder.userId && createdOrder.createdById && createdOrder.userId !== createdOrder.createdById) {
+        try {
+          const machine = await MachineRepository.findById(createdOrder.machineId);
+          const machineName = machine?.name || "Equipamento";
+          
+          await NotificationService.create({
+            title: "Nova Ordem de Serviço Atribuída",
+            message: `Uma nova ordem de serviço foi atribuída a você: "${createdOrder.title}" no equipamento ${machineName}`,
+            userId: createdOrder.userId
+          });
+        } catch (notifError) {
+          // Não falha a criação se a notificação falhar
+          console.error("❌ Erro ao enviar notificação ao técnico:", notifError);
+        }
+      }
+
       return createdOrder;
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -101,8 +118,31 @@ export const MaintenanceOrderService = {
         }
       }
 
+      // Verifica se o técnico foi alterado ou atribuído pela primeira vez
+      const oldUserId = found.userId;
+      const newUserId = data.userId;
+      const technicianChanged = newUserId && (oldUserId !== newUserId);
+      const technicianAssigned = newUserId && !oldUserId; // Primeira atribuição
+
       // Atualiza a ordem
       const updatedOrder = await MaintenanceOrderRepository.update(id, data);
+
+      // Notifica o novo técnico se foi atribuído ou alterado
+      if ((technicianChanged || technicianAssigned) && newUserId) {
+        try {
+          const machine = await MachineRepository.findById(machineId);
+          const machineName = machine?.name || "Equipamento";
+          
+          await NotificationService.create({
+            title: "Ordem de Serviço Atribuída",
+            message: `Uma ordem de serviço foi atribuída a você: "${found.title}" no equipamento ${machineName}`,
+            userId: newUserId
+          });
+        } catch (notifError) {
+          // Não falha a atualização se a notificação falhar
+          console.error("❌ Erro ao enviar notificação ao técnico:", notifError);
+        }
+      }
 
       // Busca a máquina para atualizar seu status
       const machine = await MachineRepository.findById(machineId);

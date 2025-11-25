@@ -3,6 +3,7 @@ import { PasswordRecoveryRepository } from "../modules/auth/infrastructure/Passw
 import { AuditLogRepository } from "../modules/audit/infrastructure/AuditLogRepository.js";
 import {
   sendScheduleReminders,
+  sendScheduleReminders3Days,
   notifyOverdueOrders,
   sendDailyDigest,
 } from "../jobs/notificationJobs.js";
@@ -36,12 +37,13 @@ cron.schedule(
         console.log(
           `[${new Date().toLocaleString("pt-BR")}] ⏰ Executando jobs de notificação...`
         );
-        const [reminders, overdue, digest] = await Promise.all([
+        const [reminders3Days, reminders, overdue, digest] = await Promise.all([
+          sendScheduleReminders3Days(),
           sendScheduleReminders(),
           notifyOverdueOrders(),
           sendDailyDigest(),
         ]);
-        console.log("✅ Jobs executados:", { reminders, overdue, digest });
+        console.log("✅ Jobs executados:", { reminders3Days, reminders, overdue, digest });
       } catch (e) {
         console.error("❌ Falha ao executar jobs de notificação:", e);
       }

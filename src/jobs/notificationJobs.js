@@ -2,6 +2,58 @@ import prisma from "../infrastructure/database/prismaClient.js";
 import { NotificationService } from "../modules/notification/application/NotificationService.js";
 import { SettingsService } from "../modules/settings/application/SettingsService.js";
 
+// Envia lembretes de agendamento 3 dias antes para o criador
+export async function sendScheduleReminders3Days() {
+  const now = new Date();
+  // Calcula 3 dias a partir de agora (72 horas)
+  const in3Days = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+  // Janela de 24 horas para capturar agendamentos que estão entre 3 e 4 dias no futuro
+  const in4Days = new Date(now.getTime() + 4 * 24 * 60 * 60 * 1000);
+
+  const schedules = await prisma.schedule.findMany({
+    where: {
+      date: { 
+        gte: in3Days, 
+        lt: in4Days 
+      },
+    },
+    include: { 
+      machine: true, 
+      createdBy: { select: { id: true, name: true } },
+      user: { select: { id: true, name: true } }
+    },
+    orderBy: { date: "asc" },
+  });
+
+  let created = 0;
+  for (const s of schedules) {
+    // Notifica apenas o criador do agendamento (não o técnico atribuído)
+    if (s.createdById) {
+      const scheduleDate = new Date(s.date);
+      const dateStr = scheduleDate.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      const title = "Lembrete de Agendamento - 3 Dias";
+      const message = `Faltam 3 dias para o agendamento da máquina "${s.machine?.name || "(sem nome)"}" em ${dateStr}`;
+      
+      const res = await NotificationService.createIfNotExists({
+        title,
+        message,
+        userId: s.createdById,
+        scheduleId: s.id,
+        windowMinutes: 1440, // Evita duplicatas no mesmo dia
+      });
+      if (res?.id) created++;
+    }
+  }
+  return { scanned: schedules.length, created };
+}
+
 // Envia lembretes de agendamento 24h antes
 export async function sendScheduleReminders() {
   const now = new Date();
