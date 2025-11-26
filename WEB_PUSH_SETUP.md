@@ -79,3 +79,4 @@ Após configurar as variáveis, reinicie o servidor backend e verifique se a rot
 - Mantenha as subscriptions atualizadas (remova inválidas)
 
 
+
